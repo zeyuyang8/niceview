@@ -22,6 +22,7 @@ dash
 # Data science
 pandas
 numpy
+opencv-python
 
 # Big data
 datashader

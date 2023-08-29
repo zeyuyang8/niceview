@@ -40,36 +40,32 @@ def rgba2rgb(rgba):
 
 
 def geo_ref_raster(
-    img_dir,
-    img_name,
+    img_path,
+    dst_path,
     src_code=32632,
     dst_code=4326,
-    affine_coefs=(1.01, 0.0, 0.0, 0.0, -1.01, 0.0),
+    affine_coefs=(0.1, 0.0, 0.0, 0.0, -0.1, 0.0),
+    overwrite=True,
 ):
     """Georefence raster image.
 
     Args:
-        img_dir (str): image directory.
-        img_name (str): image name.
+        img_path (str): path to image.
+        dst_path (str): destination path.
         src_code (int): source EPSG code.
         dst_code (int): destination EPSG code.
         affine_coefs (tuple): affine transform coefficients.
+        overwrite (bool): whether to overwrite existing file.
     
     Returns:
         str: path to georeferenced image.
     """
-    # destination crs, name, and path
-    dst_crs = ':'.join(['EPSG', str(dst_code)])
-    dst_name = ''.join([os.path.splitext(img_name)[0], '_georef.tiff'])
-    dst_path = os.path.join(img_dir, dst_name)
-    
     # if already exists, return path
-    if os.path.exists(dst_path):
-        print('Georeferenced image already exists.')
+    if os.path.exists(dst_path) and not overwrite:
+        print(f'File {dst_path} already exists.')
         return dst_path
     
     # read image
-    img_path = os.path.join(img_dir, img_name)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         img = rasterio.open(img_path)
@@ -86,7 +82,7 @@ def geo_ref_raster(
     affine = rasterio.Affine(*affine_coefs)
 
     # georeference image and write temporary file
-    temp_path = os.path.join(img_dir, 'temp.tiff')
+    temp_path = os.path.join(os.path.dirname(dst_path), 'temp.tiff')
     with rasterio.open(
         temp_path,
         'w',
@@ -101,9 +97,11 @@ def geo_ref_raster(
         src.write(img_array)
 
     # reproject image to destination crs and write to file
+    dst_crs = ':'.join(['EPSG', str(dst_code)])
     with rasterio.open(temp_path) as src:
         transform, width, height = calculate_default_transform(
             src.crs, dst_crs, src.width, src.height, *src.bounds,
+            dst_height=src.height, dst_width=src.width,  # very important to keep same size
         )
         kwargs = src.meta.copy()
         kwargs.update(
