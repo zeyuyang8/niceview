@@ -3,6 +3,7 @@
 import os
 import cv2
 import numpy as np
+import skimage.measure
 
 
 # TODO: apply custom colormap
@@ -40,3 +41,24 @@ def mask_overlay_image(img_path, mask, dst_path, overwrite=False):
     heatmap = np.transpose(heatmap, (1, 2, 0))
     cv2.imwrite(dst_path, heatmap)
     return dst_path
+
+
+def mask_to_bbox(mask):
+    """Compute bounding boxes, centroid, and labels from mask.
+
+    Args:
+        mask (np.ndarray): mask array of shape (row, col), background value is 0.
+
+    Returns:
+        dict: dictionary of bounding boxes, centroids, and labels.
+    """
+    props = skimage.measure.regionprops(mask)
+    bboxes = np.array([prop.bbox for prop in props])
+    centroids = np.array([prop.centroid for prop in props])
+    centroids = np.round(centroids).astype(int)
+    labels = np.array([prop.label for prop in props])
+    return {
+        'bboxes': bboxes,
+        'centroids': centroids,
+        'labels': labels,
+    }

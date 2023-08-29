@@ -1,3 +1,23 @@
+# Data science
+pandas
+numpy
+opencv-python
+supervision
+scikit-learn
+scikit-image
+
+# Visualization
+matplotlib
+dash
+
+# Big data
+datashader
+
+# Map service
+rasterio
+geojsoncontour
+localtileserver
+
 # Jupyter
 jupyter
 ipykernel
@@ -7,22 +27,3 @@ nbformat
 
 # Linting
 wemake-python-styleguide
-
-# Local tile server
-localtileserver
-
-# Map service
-rasterio
-geojsoncontour
-
-# Visualization
-matplotlib
-dash
-
-# Data science
-pandas
-numpy
-opencv-python
-
-# Big data
-datashader
