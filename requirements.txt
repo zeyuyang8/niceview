@@ -6,6 +6,9 @@ supervision
 scikit-learn
 scikit-image
 
+# Bioinformatics
+scanpy
+
 # Visualization
 matplotlib
 dash
