@@ -50,13 +50,14 @@ def select_col_from_name(matrix, name_list, name):
     return matrix[:, idx]
 
 
-def normalize_log_nonzero_to_range(arr, min_range=1, max_range=255):
+def normalize_nonzero_to_range(arr, min_range=1, max_range=255, log=False):
     """Normalize log-transformed nonzero elements to a specified range.
     
     Args:
         arr (np.ndarray): array of shape (row, col).
         min_range (int): minimum value of the range.
         max_range (int): maximum value of the range.
+        log (bool): whether to log transform the array.
     
     Returns:
         np.ndarray: normalized array of shape (row, col).
@@ -65,7 +66,8 @@ def normalize_log_nonzero_to_range(arr, min_range=1, max_range=255):
     nonzero_elements = arr[arr != 0]
     
     # log transform
-    nonzero_elements = np.log(nonzero_elements)
+    if log:
+        nonzero_elements = np.log(nonzero_elements)
 
     # Calculate the min and max of the nonzero elements
     min_val = np.min(nonzero_elements)

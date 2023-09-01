@@ -9,13 +9,15 @@ from scipy.sparse import load_npz
 
 # TODO: apply custom colormap
 # https://stackoverflow.com/questions/52498777/apply-matplotlib-or-custom-colormap-to-opencv-image
-def mask_overlay_image(img_path, mask, dst_path, overwrite=False):
+def mask_overlay_image(img_path, mask, dst_path, mask_opacity=0.3, colormap='jet', overwrite=False):
     """Overlay mask on image and save to file.
 
     Args:
         img_path (str): path to image.
         mask (np.ndarray): mask array of shape (row, col), background value is 0.
         dst_path (str): destination path.
+        mask_opacity (float): opacity of mask.
+        colormap (str): colormap of mask.
         overwrite (bool): whether to overwrite existing file.
 
     Returns:
@@ -24,23 +26,26 @@ def mask_overlay_image(img_path, mask, dst_path, overwrite=False):
     if os.path.exists(dst_path) and not overwrite:
         print(f'File {dst_path} already exists.')
         return dst_path
+    if colormap == 'jet':
+        cmap = cv2.COLORMAP_JET
     
     # mask image
     mask_img = cv2.cvtColor(mask.astype(np.uint8), cv2.COLOR_BGR2RGB)
-    mask_img = cv2.applyColorMap(mask_img, cv2.COLORMAP_JET)
+    mask_img = cv2.applyColorMap(mask_img, cmap)
+    mask_blend = cv2.bitwise_and(mask_img, mask_img, mask=mask.astype(np.uint8))
     
     # background image
     bkgd_img = cv2.imread(img_path)
+    bkgd_blend = cv2.bitwise_and(bkgd_img, bkgd_img, mask=mask.astype(np.uint8))
+    inv_mask = (mask == 0).astype(np.uint8)
+    bkgd = cv2.bitwise_and(bkgd_img, bkgd_img, mask=inv_mask)
     
-    # place filter
-    mask_place = (mask != 0).astype(np.uint8)  # mask locations
-    bkgd_place = (mask == 0).astype(np.uint8)  # background locations
-
     # overlay
-    heatmap = mask_place * np.transpose(mask_img, (2, 0, 1))  # mask
-    heatmap = heatmap + bkgd_place * np.transpose(bkgd_img, (2, 0, 1))  # background
-    heatmap = np.transpose(heatmap, (1, 2, 0))
-    cv2.imwrite(dst_path, heatmap)
+    mask_ovelay = cv2.addWeighted(mask_blend, mask_opacity, bkgd_blend, 1.0 - mask_opacity, 0)
+    whole_img = cv2.addWeighted(mask_ovelay, 1.0, bkgd, 1.0, 0)
+    
+    # save
+    cv2.imwrite(dst_path, whole_img)
     return dst_path
 
 
