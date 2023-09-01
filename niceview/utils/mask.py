@@ -4,6 +4,7 @@ import os
 import cv2
 import numpy as np
 import skimage.measure
+from scipy.sparse import load_npz
 
 
 # TODO: apply custom colormap
@@ -62,3 +63,32 @@ def mask_to_bbox(mask):
         'centroids': centroids,
         'labels': labels,
     }
+
+
+def sparse_npz_to_array(npz_path):
+    """Convert sparse matrix in npz format to array.
+    
+    Args:
+        npz_path (str): path to npz file.
+
+    Returns:
+        np.ndarray: array of shape (row, col).
+    """
+    mask = load_npz(npz_path)
+    mask = mask.toarray()
+    return mask
+
+
+def relabel_mask_bbox(mask, output_label):
+    """Relabel mask to output_label (apply to bounding boxes).
+    
+    Args:
+        mask (np.ndarray): mask array of shape (row, col), background value is 0.
+        output_label (np.ndarray): output labels.
+    
+    Returns:
+        np.ndarray: relabeled mask.
+    """
+    table = skimage.measure.regionprops_table(mask)
+    relabeled_mask = skimage.util.map_array(mask, table['label'], output_label)
+    return relabeled_mask

@@ -3,6 +3,11 @@
 ## Installation
 
 ```bash
+sudo apt-get install pkg-config
+sudo apt-get install libgtk2.0-dev
+```
+
+```bash
 conda create -n niceview python==3.9
 source activate niceview
 pip install -r requirements.txt
