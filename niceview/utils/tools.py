@@ -1,7 +1,5 @@
 """Tools."""
 
-import numpy as np
-
 
 def txt_to_list(txt_file):
     """Read lines of a txt file to a list.
@@ -47,39 +45,4 @@ def select_col_from_name(matrix, name_list, name):
         np.ndarray: column of shape (row,).
     """
     idx = name_list.index(name)
-    return matrix[:, idx]
-
-
-def normalize_nonzero_to_range(arr, min_range=1, max_range=255, log=False):
-    """Normalize log-transformed nonzero elements to a specified range.
-    
-    Args:
-        arr (np.ndarray): array of shape (row, col).
-        min_range (int): minimum value of the range.
-        max_range (int): maximum value of the range.
-        log (bool): whether to log transform the array.
-    
-    Returns:
-        np.ndarray: normalized array of shape (row, col).
-    """
-    # Find the nonzero elements
-    nonzero_elements = arr[arr != 0]
-    
-    # log transform
-    if log:
-        nonzero_elements = np.log(nonzero_elements)
-
-    # Calculate the min and max of the nonzero elements
-    min_val = np.min(nonzero_elements)
-    max_val = np.max(nonzero_elements)
-
-    # Normalize the nonzero elements to the specified range
-    normalized_nonzero = (
-        (nonzero_elements - min_val) / (max_val - min_val)
-    ) * (max_range - min_range) + min_range
-
-    # Create a new array with the same shape as the original array
-    normalized_arr = np.zeros_like(arr, dtype=float)
-    normalized_arr[arr != 0] = normalized_nonzero
-
-    return normalized_arr
+    return matrix.tocsr()[:, idx].todense()
