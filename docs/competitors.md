@@ -11,7 +11,7 @@
 
 ## Recent technologies - biology perspective
 
-TBD
+TBA
 
 ## Recent technologies - programming perspective
 
@@ -20,4 +20,4 @@ TBD
 
 ## Recent technologies - algorithmic perspective
 
-TBD
+TBA
