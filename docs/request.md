@@ -16,3 +16,6 @@
 - Gene expression
 - Callbacks
   - Draw a region and save it to a file. There should be a function to convert the GIS coordinate to the WSI pixels.
+
+[high performance](https://numba.pydata.org/)
+[leaflet demo for map analysis](https://www.youtube.com/watch?v=6-KTrjtfS9U)

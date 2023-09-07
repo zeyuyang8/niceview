@@ -4,7 +4,7 @@ import os
 import dash
 from dash import html
 import dash_core_components as dcc
-from niceview.utils.mask import sparse_npz_to_array, mask_overlay_image, mask_to_bbox
+from archive.mask import sparse_npz_to_array, mask_overlay_image, mask_to_bbox
 from niceview.utils.raster import geo_ref_raster, geo_raster_to_meshgrid, index_to_meshgrid_coord
 from niceview.pyplot.geoplot import scatter_overlay_georef_img
 
