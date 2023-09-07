@@ -1,4 +1,4 @@
-"""Index page for niceview."""
+"""Archived."""
 
 import os
 import dash

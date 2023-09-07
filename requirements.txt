@@ -12,6 +12,7 @@ scanpy
 # Visualization
 matplotlib
 dash
+dash_leaflet
 
 # Big data
 datashader
