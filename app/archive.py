@@ -107,3 +107,15 @@ app.layout = html.Div(
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+
+# dl.Map(
+#     [
+#         dl.TileLayer(url=cells_tile_layer.url),
+#         dl.FullScreenControl(),
+#         dl.ScaleControl(position='bottomleft'),
+#     ],
+#     center=[cells_client.center()[0], cells_client.center()[1]],
+#     zoom=cells_client.default_zoom,
+#     style={'width': '60vh', 'height': '60vh', 'margin': 'auto', 'display': 'block'},
+#     attributionControl=False,
+# ),
