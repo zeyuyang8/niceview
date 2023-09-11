@@ -31,3 +31,6 @@ nbformat
 
 # Linting
 wemake-python-styleguide
+
+# Configuration
+toml
