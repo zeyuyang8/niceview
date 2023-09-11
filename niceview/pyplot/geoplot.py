@@ -69,7 +69,7 @@ def scatter_overlay_gis(
             },
             dragmode='lasso',
             newselection={
-                'line': {'color': 'red'},
+                'line': {'color': 'black', 'width': 2, 'dash': 'dash'},
             },
             autosize=False,
             width=window_width,

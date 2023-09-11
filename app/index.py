@@ -2,7 +2,7 @@
 
 import json
 import os
-from dash import Dash, dcc, html, Input, Output, no_update, callback
+from dash import Dash, dcc, html, Input, Output, callback
 from localtileserver import TileClient, get_leaflet_tile_layer
 import numpy as np
 import pandas as pd
@@ -80,47 +80,6 @@ cells_fig = scatter_overlay_gis(
     title='Cells',
 )
 
-# spots client
-spots_client = TileClient(
-    os.path.join(PLOTS_PATH, cache['gis-blend-spots']),
-    cors_all=True,
-)
-spots_tile_layer = get_leaflet_tile_layer(spots_client)
-
-# spots data processing
-spots_info = pd.read_csv(os.path.join(DATA_PATH, files['spots-info']))
-spots_pos = spots_info[['x', 'y']].values
-spots_diameter = spots_info['diameter'].values
-spots_gene = load_npz(os.path.join(DATA_PATH, files['spots-gene']))  # scipy.sparse.csr.csr_matrix
-spots_gene_names = txt_to_list(os.path.join(DATA_PATH, files['spots-gene-names']))
-spots_selected_gene = select_col_from_name(spots_gene, spots_gene_names, spots_selected_gene_name)
-spots_selected_gene_normalized = normalize_array(spots_selected_gene, 1, CMAX)
-
-# spots figure
-spots_fig = scatter_overlay_gis(
-    spots_client, spots_tile_layer,
-    spots_pos[:, 0], spots_pos[:, 1],
-    marker_size=spots_diameter,
-    marker_color=np.squeeze(np.array(spots_selected_gene)),  # ravel col vector
-    marker_color_scale='jet',
-    marker_opacity=0.0,
-    window_height=window_size[0],
-    window_width=window_size[1],
-    title='Spots',
-)
-
-# config
-config = {
-    'modeBarButtonsToAdd': [
-        'drawline',
-        'drawopenpath',
-        'drawclosedpath',
-        'drawcircle',
-        'drawrect',
-        'eraseshape',
-    ],
-}
-
 # app starts here
 app = Dash(
     __name__,
@@ -145,38 +104,29 @@ app.layout = html.Div(
                 html.P('A simple Dash app.'),
             ],
         ),
-        html.Pre(id='annotations-data'),
         html.Div(
             id='app-container',
             children=[
-                dcc.Graph(
-                    id='cells-fig',
-                    figure=cells_fig,
-                    config=config,
+                html.Div(
+                    id='lassoData',
+                    # style={'display': 'none'},
                 ),
                 dcc.Graph(
-                    id='spots-fig',
-                    figure=spots_fig,
+                    id='graph',
+                    figure=cells_fig,
                 ),
             ],
         ),
     ],
 )
-app.css.append_css({
-    'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css',
-})
 
 
-# callbacks
-@callback(
-    Output('annotations-data', 'children'),
-    Input('cells-fig', 'relayoutData'),
-    prevent_initial_call=True,
+@app.callback(
+    Output('lassoData', 'children'),
+    Input('graph', 'selectedData'),
 )
-def on_new_annotation(relayout_data):
-    if 'shapes' in relayout_data:
-        return json.dumps(relayout_data["shapes"], indent=4)
-    return no_update
+def _save_lasso_data(selectedData):
+    return json.dumps(selectedData, indent=2)
 
 
 # run app
