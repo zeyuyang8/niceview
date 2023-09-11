@@ -67,12 +67,10 @@ def scatter_overlay_gis(
                     },
                 ],
             },
-            # margin={
-            #     'l': 30,
-            #     'r': 30,
-            #     'b': 30,
-            #     't': 30,
-            # },
+            dragmode='lasso',
+            newselection={
+                'line': {'color': 'red'},
+            },
             autosize=False,
             width=window_width,
             height=window_height,
