@@ -1,7 +1,7 @@
 """App."""
 
-# read data
-# data processing
+# reading data
+# analysis pipeline
 # data visualization
 # interactive interface
 # app
