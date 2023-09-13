@@ -2,6 +2,8 @@
 
 import plotly.graph_objects as go
 
+CMAX = 255
+
 
 def scatter_overlay_gis(
     map_client, map_tile_layer,
@@ -40,11 +42,15 @@ def scatter_overlay_gis(
                     colorscale=marker_color_scale,
                     colorbar={
                         'thickness': 10,
-                        'orientation': 'h',
-                        'y': -0.1,
+                        'ticklen': 3,
+                        'title': {
+                            'text': 'Gene Expression',
+                            'side': 'right',
+                        },
+                        'titleside': 'right',
                     },
                     cmin=0,
-                    cmax=255,
+                    cmax=CMAX,
                 ),
                 text='center',
                 hoverinfo='text',
@@ -67,15 +73,16 @@ def scatter_overlay_gis(
                     },
                 ],
             },
-            dragmode='lasso',
-            newselection={
-                'line': {'color': 'black', 'width': 2, 'dash': 'dash'},
+            margin={
+                'l': 30,
+                'r': 30,
+                'b': 30,
+                't': 30,
             },
             autosize=False,
             width=window_width,
             height=window_height,
             paper_bgcolor='LightSteelBlue',
-            title=title,
         ),
     )
     return fig
