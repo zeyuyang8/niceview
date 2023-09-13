@@ -24,7 +24,7 @@ def get_nuclei_pixels(cm, ad_cell_pos):
     nuclei_region_pixels = [
         (regions[n].coords[:, 0], regions[n].coords[:, 1]) for n in c_index
     ]
-    return nuclei_region_pixels
+    return np.array(nuclei_region_pixels, dtype=object)
 
 
 def paint_regions(image_shape, matched_regions, cell_colors_list):

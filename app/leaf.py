@@ -99,7 +99,7 @@ app.layout = html.Div(
                             minZoom=cells_client.default_zoom,
                         ),
                         dl.FullScreenControl(),
-                        dl.ScaleControl(imperial=False, metric=True, maxWidth=SCALE_MAX_WIDTH),
+                        # dl.ScaleControl(imperial=False, metric=True, maxWidth=SCALE_MAX_WIDTH),
                         dl.FeatureGroup(
                             [
                                 dl.EditControl(),
