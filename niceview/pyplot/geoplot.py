@@ -3,6 +3,7 @@
 import plotly.graph_objects as go
 
 CMAX = 255
+CMIN = 0
 
 
 def scatter_overlay_gis(
@@ -49,7 +50,7 @@ def scatter_overlay_gis(
                         },
                         'titleside': 'right',
                     },
-                    cmin=0,
+                    cmin=CMIN,
                     cmax=CMAX,
                 ),
                 text='center',

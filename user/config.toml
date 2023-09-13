@@ -1,0 +1,8 @@
+[path]
+data = '/home/tom/github/niceview/db/data/'
+cache = '/home/tom/github/niceview/db/cache/'
+plot = '/home/tom/github/niceview/db/plot/'
+
+[constant.color]
+cmin = 0
+cmax = 255
