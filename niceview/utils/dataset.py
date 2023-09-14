@@ -5,6 +5,7 @@ import cv2
 import pandas as pd
 import numpy as np
 from scipy.sparse import load_npz
+from localtileserver import TileClient, get_leaflet_tile_layer
 from niceview.utils.tools import txt_to_list, select_col_from_name, normalize_array
 from niceview.utils.tools import mask_filter_relabel, mask_to_image, discrete_cmap_from_hex
 from niceview.utils.tools import blend, draw_circles
@@ -345,6 +346,18 @@ class ThorQuery:
                     self.dataset.get_cache_field(sample_id, 'blend-spot-gene-img'),
                     self.dataset.get_cache_field(sample_id, 'gis-blend-spot-gene-img'),
                 )
+    
+    def wsi_gis(self, sample_id):
+        """WSI GIS.
+        
+        Args:
+            sample_id (str): sample id.
+        """
+        if not os.path.exists(self.dataset.get_cache_field(sample_id, 'gis-wsi-img')):
+            geo_ref_raster(
+                self.dataset.get_data_field(sample_id, 'wsi-img'),
+                self.dataset.get_cache_field(sample_id, 'gis-wsi-img'),
+            )
 
     def empty_cache(self, sample_id, cache_field):
         """Empty cache.
@@ -384,3 +397,21 @@ class ThorQuery:
             self.empty_cache(sample_id, 'circle-spot-gene-img')
             self.empty_cache(sample_id, 'blend-spot-gene-img')
             self.empty_cache(sample_id, 'gis-blend-spot-gene-img')
+
+    def gis_client_and_layer(self, sample_id, cache_field):
+        """GIS client.
+        
+        Args:
+            sample_id (str): sample id.
+            cache_field (str): cache field.
+        
+        Returns:
+            client (TileClient): tile client.
+            layer (TileLayer): tile layer.
+        """
+        client = TileClient(
+            self.dataset.get_cache_field(sample_id, cache_field),
+            cors_all=True,
+        )
+        layer = get_leaflet_tile_layer(client)
+        return client, layer

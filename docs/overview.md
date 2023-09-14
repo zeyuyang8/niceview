@@ -12,3 +12,9 @@ For each image, we have:
 ## Data processing
 
 ## Data visualization
+
+- reading data
+- analysis pipeline
+- data visualization
+- interactive interface
+- app

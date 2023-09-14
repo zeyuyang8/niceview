@@ -21,7 +21,8 @@
         "circle-spot-gene-img": "png",
         "gis-blend-cell-gene-img": "tiff",
         "gis-blend-cell-type-img": "tiff",
-        "gis-blend-spot-gene-img": "tiff"
+        "gis-blend-spot-gene-img": "tiff",
+        "gis-wsi-img": "tiff"
     },
     "cell_label_encoder": {
         "pericyte": 1,
