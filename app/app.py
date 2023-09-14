@@ -3,13 +3,15 @@
 import toml
 import json
 import dash_leaflet as dl
+import dash_uploader as du
 from niceview.utils.dataset import ThorQuery
-from dash import Dash, html
+from dash import Dash, html, dcc
 
 # config
 config = toml.load('user/config.toml')
 data_path = config['path']['data']
 cache_path = config['path']['cache']
+max_file_size = config['constant']['max_file_size']
 
 # database information
 with open('./db/db-info.json', 'r') as json_file:
@@ -73,6 +75,31 @@ app.layout = html.Div(
             children=[
                 html.H4('Nice View'),
                 html.P('A simple Dash app.'),
+            ],
+        ),
+        html.Div(
+            id='user-input',
+            children=[
+                html.Div(
+                    id='data-upload',
+                    children=[
+                        du.Upload(id='upload-image', max_file_size=max_file_size),
+                    ],
+                ),
+                html.Div(
+                    id='data-select',
+                    children=[
+                        dcc.Dropdown(placeholder='Select sample'),
+                        dcc.Dropdown(placeholder='Select type of visualization'),
+                        dcc.Dropdown(placeholder='Select gene'),
+                    ],
+                ),
+            ],
+        ),
+        html.Div(
+            id='trigger',
+            children=[
+                html.Button('Submit', id='submit-button', n_clicks=0),
             ],
         ),
         html.Div(

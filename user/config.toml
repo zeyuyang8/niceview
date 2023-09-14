@@ -3,6 +3,7 @@ data = '/home/tom/github/niceview/db/data/'
 cache = '/home/tom/github/niceview/db/cache/'
 plot = '/home/tom/github/niceview/db/plot/'
 
-[constant.color]
+[constant]
 cmin = 0
 cmax = 255
+max_file_size = 5000
