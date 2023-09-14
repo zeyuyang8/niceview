@@ -205,7 +205,7 @@ class ThorQuery:
                     ),
                 )
     
-    def cell_blend(self, sample_id, selected_cell_gene_name=None, label_analysis=False, mask_opacity=0.5):
+    def cell_blend(self, sample_id, selected_cell_gene_name=None, label_analysis=False, mask_opacity=1):
         """Cell blend.
 
         Args:
@@ -215,7 +215,7 @@ class ThorQuery:
             mask_opacity (float): mask opacity.
         """
         # analysis
-        self.cell_analysis(self, sample_id, selected_cell_gene_name, label_analysis)
+        self.cell_analysis(sample_id, selected_cell_gene_name, label_analysis)
         
         if selected_cell_gene_name:
             if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-gene-img')):
@@ -239,7 +239,7 @@ class ThorQuery:
                     ),
                 )
 
-    def cell_gis(self, sample_id, selected_cell_gene_name=None, label_analysis=False, mask_opacity=0.5):
+    def cell_gis(self, sample_id, selected_cell_gene_name=None, label_analysis=False, mask_opacity=1):
         """Cell blend.
 
         Args:
@@ -249,7 +249,7 @@ class ThorQuery:
             mask_opacity (float): mask opacity.
         """
         # blend
-        self.cell_blend(self, sample_id, selected_cell_gene_name, label_analysis, mask_opacity)
+        self.cell_blend(sample_id, selected_cell_gene_name, label_analysis, mask_opacity)
         
         # georeference images for blended cell selected gene and cell type
         if selected_cell_gene_name:
@@ -303,7 +303,7 @@ class ThorQuery:
                     ),
                 )
     
-    def spot_blend(self, sample_id, selected_spot_gene_name, thickness=-1, mask_opacity=0.5):
+    def spot_blend(self, sample_id, selected_spot_gene_name, thickness=-1, mask_opacity=1):
         """Spot blend.
         
         Args:
@@ -326,7 +326,7 @@ class ThorQuery:
                     ),
                 )
     
-    def spot_gis(self, sample_id, selected_spot_gene_name, thickness=-1, mask_opacity=0.5):
+    def spot_gis(self, sample_id, selected_spot_gene_name, thickness=-1, mask_opacity=1):
         """Spot GIS.
         
         Args:
@@ -345,3 +345,42 @@ class ThorQuery:
                     self.dataset.get_cache_field(sample_id, 'blend-spot-gene-img'),
                     self.dataset.get_cache_field(sample_id, 'gis-blend-spot-gene-img'),
                 )
+
+    def empty_cache(self, sample_id, cache_field):
+        """Empty cache.
+        
+        Args:
+            sample_id (str): sample id.
+            cache_field (str): cache field.
+        """
+        os.remove(self.dataset.get_cache_field(sample_id, cache_field))
+
+    def empty_cache_cell(self, sample_id, gene=False, label=False):
+        """Empty cell gene.
+        
+        Args:
+            sample_id (str): sample id.
+            gene (bool): whether to empty cell gene.
+            label (bool): whether to empty cell label.
+        """
+        if gene:
+            self.empty_cache(sample_id, 'mask-cell-gene-img')
+            self.empty_cache(sample_id, 'blend-cell-gene-img')
+            self.empty_cache(sample_id, 'gis-blend-cell-gene-img')
+
+        if label:
+            self.empty_cache(sample_id, 'mask-cell-type-img')
+            self.empty_cache(sample_id, 'blend-cell-type-img')
+            self.empty_cache(sample_id, 'gis-blend-cell-type-img')
+    
+    def empty_cache_spot(self, sample_id, gene=False):
+        """Empty spot gene.
+        
+        Args:
+            sample_id (str): sample id.
+            gene (bool): whether to empty spot gene.
+        """
+        if gene:
+            self.empty_cache(sample_id, 'circle-spot-gene-img')
+            self.empty_cache(sample_id, 'blend-spot-gene-img')
+            self.empty_cache(sample_id, 'gis-blend-spot-gene-img')
