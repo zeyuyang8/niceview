@@ -1,6 +1,18 @@
 """Dataset utilities."""
 
 import os
+import cv2
+import pandas as pd
+import numpy as np
+from scipy.sparse import load_npz
+from niceview.utils.tools import txt_to_list, select_col_from_name, normalize_array
+from niceview.utils.tools import mask_filter_relabel, mask_to_image, discrete_cmap_from_hex
+from niceview.utils.tools import blend, draw_circles
+from niceview.utils.raster import geo_ref_raster
+from niceview.utils.cell import get_nuclei_pixels
+
+CMAX = 255
+CMIN = 1  # avoid zero to distinguish from background
 
 
 class AristotleDataset:
@@ -78,3 +90,258 @@ class AristotleDataset:
         filename = '-'.join([primary_key, field_name])
         filename = '.'.join([filename, extension])
         return filename
+
+
+class ThorQuery:
+    """Container for query."""
+    
+    def __init__(
+        self,
+        data_path,
+        cache_path, 
+        data_extension, 
+        cache_extension, 
+        cell_label_encoder, 
+        cell_label_cmap, 
+        primary_key_list,
+    ):
+        """Initialize query.
+        
+        Args:
+            data_path (str): data path.
+            cache_path (str): cache path.
+            data_extension (dict): data extension.
+            cache_extension (dict): cache extension.
+            cell_label_encoder (dict): cell label encoder.
+            cell_label_cmap (dict): cell label colormap.
+            primary_key_list (list of str): list of primary keys.
+        """
+        self._data_path = data_path
+        self._cache_path = cache_path
+        self._data_extension = data_extension
+        self._cache_extension = cache_extension
+        self._cell_label_encoder = cell_label_encoder
+        self._cell_label_cmap = cell_label_cmap
+        self._primary_key_list = primary_key_list
+    
+        self.dataset = AristotleDataset(
+            data_path,
+            data_extension,
+            cache_path,
+            cache_extension,
+            primary_key_list,
+        )
+    
+    def cell_analysis(self, sample_id, selected_cell_gene_name=None, label_analysis=False):
+        """Cell gene analysis.
+        
+        Args:
+            sample_id (str): sample id.
+            selected_cell_gene_name (str): list of selected cell gene name.
+            label_analysis (bool): whether to label the cell.
+        """
+        cell_info = pd.read_csv(
+            self.dataset.get_data_field(sample_id, 'cell-info'),
+        )
+        cell_pos = cell_info[['x', 'y']].values
+        if os.path.exists(self.dataset.get_cache_field(sample_id, 'mask-cell-match-region')):
+            cell_matched_region = np.load(
+                self.dataset.get_cache_field(sample_id, 'mask-cell-match-region'),
+                allow_pickle=True,
+            )
+        else:
+            cell_matched_region = get_nuclei_pixels(
+                load_npz(
+                    self.dataset.get_data_field(sample_id, 'cell-mask'),
+                ).tocsr()[:, :].todense(),
+                cell_pos,
+            )
+            np.save(
+                self.dataset.get_cache_field(sample_id, 'mask-cell-match-region'),
+                cell_matched_region,
+                allow_pickle=True,
+            )
+        
+        # gene
+        if selected_cell_gene_name:
+            cell_gene = load_npz(
+                self.dataset.get_data_field(sample_id, 'cell-gene'),
+            )
+            cell_gene_name = txt_to_list(
+                self.dataset.get_data_field(sample_id, 'cell-gene-name'),
+            )
+            cell_selected_gene = select_col_from_name(
+                cell_gene, cell_gene_name, selected_cell_gene_name,
+            )
+            cell_selected_gene_norm = normalize_array(cell_selected_gene, CMIN, CMAX)
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'mask-cell-gene-img')):
+                cv2.imwrite(
+                    self.dataset.get_cache_field(sample_id, 'mask-cell-gene-img'),
+                    mask_to_image(
+                        mask_filter_relabel(
+                            self.dataset.get_data_field(sample_id, 'cell-mask'),
+                            cell_matched_region,
+                            cell_selected_gene_norm,
+                        ),
+                        cv2.COLORMAP_JET,
+                    ),
+                )
+        
+        # label
+        if label_analysis:
+            cell_label = [
+                self._cell_label_encoder[x] for x in cell_info['label'].values
+            ]
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'mask-cell-type-img')):
+                cv2.imwrite(
+                    self.dataset.get_cache_field(sample_id, 'mask-cell-type-img'),
+                    mask_to_image(
+                        mask_filter_relabel(
+                            self.dataset.get_data_field(sample_id, 'cell-mask'),
+                            cell_matched_region,
+                            cell_label,
+                        ),
+                        discrete_cmap_from_hex(self._cell_label_cmap),
+                    ),
+                )
+    
+    def cell_blend(self, sample_id, selected_cell_gene_name=None, label_analysis=False, mask_opacity=0.5):
+        """Cell blend.
+
+        Args:
+            sample_id (str): sample id.
+            selected_cell_gene_name (str): list of selected cell gene name.
+            label_analysis (bool): whether to label the cell.
+            mask_opacity (float): mask opacity.
+        """
+        # analysis
+        self.cell_analysis(self, sample_id, selected_cell_gene_name, label_analysis)
+        
+        if selected_cell_gene_name:
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-gene-img')):
+                cv2.imwrite(
+                    self.dataset.get_cache_field(sample_id, 'blend-cell-gene-img'),
+                    blend(
+                        self.dataset.get_data_field(sample_id, 'wsi-img'),
+                        self.dataset.get_cache_field(sample_id, 'mask-cell-gene-img'),
+                        mask_opacity,
+                    ),
+                )
+        
+        if label_analysis:
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-type-img')):
+                cv2.imwrite(
+                    self.dataset.get_cache_field(sample_id, 'blend-cell-type-img'),
+                    blend(
+                        self.dataset.get_data_field(sample_id, 'wsi-img'),
+                        self.dataset.get_cache_field(sample_id, 'mask-cell-type-img'),
+                        mask_opacity,
+                    ),
+                )
+
+    def cell_gis(self, sample_id, selected_cell_gene_name=None, label_analysis=False, mask_opacity=0.5):
+        """Cell blend.
+
+        Args:
+            sample_id (str): sample id.
+            selected_cell_gene_name (str): list of selected cell gene name.
+            label_analysis (bool): whether to label the cell.
+            mask_opacity (float): mask opacity.
+        """
+        # blend
+        self.cell_blend(self, sample_id, selected_cell_gene_name, label_analysis, mask_opacity)
+        
+        # georeference images for blended cell selected gene and cell type
+        if selected_cell_gene_name:
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'gis-blend-cell-gene-img')):
+                geo_ref_raster(
+                    self.dataset.get_cache_field(sample_id, 'blend-cell-gene-img'),
+                    self.dataset.get_cache_field(sample_id, 'gis-blend-cell-gene-img'),
+                )
+        
+        if label_analysis:
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'gis-blend-cell-type-img')):
+                geo_ref_raster(
+                    self.dataset.get_cache_field(sample_id, 'blend-cell-type-img'),
+                    self.dataset.get_cache_field(sample_id, 'gis-blend-cell-type-img'),
+                )
+    
+    def spot_analysis(self, sample_id, selected_spot_gene_name, thickness=-1):
+        """Spot analysis.
+        
+        Args:
+            sample_id (str): sample id.
+            selected_spot_gene_name (str): list of selected spot gene name.
+            thickness (int): thickness of the circle.
+        """
+        # read image shape
+        img_shape = load_npz(self.dataset.get_data_field(sample_id, 'cell-mask')).shape
+        
+        if selected_spot_gene_name:
+            # spot info
+            spot_info = pd.read_csv(self.dataset.get_data_field(sample_id, 'spot-info'))
+            spot_pos = spot_info[['x', 'y']].values
+            spot_diameter = spot_info['diameter'].values
+            spot_gene = load_npz(self.dataset.get_data_field(sample_id, 'spot-gene'))
+            spot_gene_name = txt_to_list(self.dataset.get_data_field(sample_id, 'spot-gene-name'))
+            spot_selected_gene = select_col_from_name(
+                spot_gene, spot_gene_name, selected_spot_gene_name,
+            )
+            spot_selected_gene_norm = normalize_array(spot_selected_gene, CMIN, CMAX)
+            
+            # draw circles
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'circle-spot-gene-img')):
+                cv2.imwrite(
+                    self.dataset.get_cache_field(sample_id, 'circle-spot-gene-img'),
+                    draw_circles(
+                        img_shape,
+                        spot_pos,
+                        spot_diameter,
+                        spot_selected_gene_norm,
+                        cmap=cv2.COLORMAP_JET,
+                        thickness=-1,
+                    ),
+                )
+    
+    def spot_blend(self, sample_id, selected_spot_gene_name, thickness=-1, mask_opacity=0.5):
+        """Spot blend.
+        
+        Args:
+            sample_id (str): sample id.
+            selected_spot_gene_name (str): list of selected spot gene name.
+            thickness (int): thickness of the circle.
+            mask_opacity (float): mask opacity.
+        """
+        # analysis
+        self.spot_analysis(sample_id, selected_spot_gene_name, thickness)
+        
+        if selected_spot_gene_name:
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-spot-gene-img')):
+                cv2.imwrite(
+                    self.dataset.get_cache_field(sample_id, 'blend-spot-gene-img'),
+                    blend(
+                        self.dataset.get_data_field(sample_id, 'wsi-img'),
+                        self.dataset.get_cache_field(sample_id, 'circle-spot-gene-img'),
+                        mask_opacity,
+                    ),
+                )
+    
+    def spot_gis(self, sample_id, selected_spot_gene_name, thickness=-1, mask_opacity=0.5):
+        """Spot GIS.
+        
+        Args:
+            sample_id (str): sample id.
+            selected_spot_gene_name (str): list of selected spot gene name.
+            thickness (int): thickness of the circle.
+            mask_opacity (float): mask opacity.
+        """
+        # blend
+        self.spot_blend(sample_id, selected_spot_gene_name, thickness, mask_opacity)
+        
+        # georeference images for blended spot selected gene
+        if selected_spot_gene_name:
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'gis-blend-spot-gene-img')):
+                geo_ref_raster(
+                    self.dataset.get_cache_field(sample_id, 'blend-spot-gene-img'),
+                    self.dataset.get_cache_field(sample_id, 'gis-blend-spot-gene-img'),
+                )

@@ -120,7 +120,7 @@ def discrete_cmap_from_hex(id_to_hex_dict):
     Returns:
         np.ndarray: discrete colormap.
     """
-    rgb_cmap = {k: hex_to_rgb(v) for k, v in id_to_hex_dict.items()}
+    rgb_cmap = {int(k): hex_to_rgb(v) for k, v in id_to_hex_dict.items()}
     rgb_cmap = np.array([rgb_cmap[i] for i in range(1, len(rgb_cmap) + 1)])
     return rgb_cmap
 

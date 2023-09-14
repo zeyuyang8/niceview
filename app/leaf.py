@@ -55,18 +55,6 @@ cells_client = TileClient(
 )
 cells_tile_layer = get_leaflet_tile_layer(cells_client)
 
-# # cells data processing
-# cells_info = pd.read_csv(os.path.join(DATA_PATH, files['cells-info']))
-# cells_centroids = np.round(cells_info[['y', 'x']].values).astype(int)
-# cells_meshgrid = geo_raster_to_meshgrid(
-#     os.path.join(os.path.join(PLOTS_PATH, cache['gis-blend-cells'])),
-# )
-# cells_lons, cells_lats = index_to_meshgrid_coord(cells_centroids, cells_meshgrid)
-# cells_gene = load_npz(os.path.join(DATA_PATH, files['cells-gene']))  # scipy.sparse.csr.csr_matrix
-# cells_gene_names = txt_to_list(os.path.join(DATA_PATH, files['cells-gene-names']))
-# cells_selected_gene = select_col_from_name(cells_gene, cells_gene_names, cells_selected_gene_name)
-# cells_selected_gene_normalized = normalize_array(cells_selected_gene, 1, CMAX)
-
 # app starts here
 app = Dash(
     __name__,
@@ -99,7 +87,6 @@ app.layout = html.Div(
                             minZoom=cells_client.default_zoom,
                         ),
                         dl.FullScreenControl(),
-                        # dl.ScaleControl(imperial=False, metric=True, maxWidth=SCALE_MAX_WIDTH),
                         dl.FeatureGroup(
                             [
                                 dl.EditControl(),
