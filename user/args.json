@@ -1,9 +1,7 @@
 {
-    "zy45": {
-        "sampleId": "gt-iz-p9-rep2",
-        "selectedCellGeneName": "ENSG00000065534",
-        "selectedSpotGeneName": "ENSG00000065534",
-        "maskOpacity": 0.5,
-        "colorMap": "jet"
-    }
+    "sampleId": "gt-iz-p9-rep2",
+    "selectedCellGeneName": "ENSG00000065534",
+    "selectedSpotGeneName": "ENSG00000065534",
+    "maskOpacity": 0.5,
+    "colorMap": "jet"
 }
