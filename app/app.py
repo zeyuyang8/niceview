@@ -121,6 +121,10 @@ app.layout = html.Div(
             id='roi',
             children=[
                 html.Div(
+                    id='geoCoords',
+                    style={'display': 'none'},
+                ),
+                html.Div(
                     id='coordinates',
                 ),
             ],
@@ -131,8 +135,10 @@ app.layout = html.Div(
 
 
 @app.callback(
+    Output('geoCoords', 'children'),
     Output('coordinates', 'children'),
     Input('editControl', 'geojson'),
+    prevent_initial_call=True,
 )
 def save_roi(drawn_geojson):
     """Save coordinates.
@@ -143,11 +149,22 @@ def save_roi(drawn_geojson):
     Returns:
         json file.
     """
-    file_name = './user/roi.json'
-    with open(file_name, 'w') as f:
+    coords = []
+    for region in drawn_geojson['features']:
+        temp = region['geometry']['coordinates'][0]
+        temp = [mapper(*point) for point in temp]
+        temp = [[point[1], point[0]] for point in temp]  # y, x -> x, y
+        coords.append(temp)
+    
+    geojson_name = './user/roi.json'
+    with open(geojson_name, 'w') as f:
         json.dump(drawn_geojson, f)
     
-    return f'{drawn_geojson}'
+    coordjson_name = './user/coords.json'
+    with open(coordjson_name, 'w') as f:
+        json.dump(coords, f)
+    
+    return f'{drawn_geojson}', f'{coords}'
 
 
 @app.callback(
@@ -165,8 +182,6 @@ def display_current_info(viewport):
     """
     viewport = [[point[1], point[0]] for point in viewport]
     viewport = [mapper(*point) for point in viewport]
-    viewport = [[height - point[0], point[1]] for point in viewport]
-    # [(row min, col min), (row max, col max)]
     return f'{viewport}'
 
 

@@ -47,11 +47,23 @@ def create_leaflet_map(
                 maxZoom=max_zoom,
                 minZoom=default_zoom,
             ),
-            dl.LayersControl(overlay_layers, hideSingleBase=True),
+            dl.LayersControl(
+                overlay_layers, hideSingleBase=True, position='bottomright',
+            ),
             dl.FullScreenControl(),
             dl.FeatureGroup(
                 [
-                    dl.EditControl(id='editControl'),
+                    dl.EditControl(
+                        id='editControl',
+                        draw={
+                            'polyline': False,
+                            'polygon': True,
+                            'rectangle': True,
+                            'circle': False,
+                            'circlemarker': False,
+                            'marker': False,
+                        },
+                    ),
                 ],
             ),
         ],
