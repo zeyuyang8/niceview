@@ -1,4 +1,5 @@
 [path]
+db = '/home/tom/github/niceview/db/'
 data = '/home/tom/github/niceview/db/data/'
 cache = '/home/tom/github/niceview/db/cache/'
 plot = '/home/tom/github/niceview/db/plot/'
