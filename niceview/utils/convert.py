@@ -9,7 +9,11 @@ import pandas as pd
 from niceview.utils.tools import list_to_txt
 
 
-def h5ad_converter(data_path, db_info_path, sample_id, h5ad_cell, h5ad_spot):
+def h5ad_converter(
+    data_path, db_info_path, sample_id,
+    h5ad_cell, h5ad_spot, cell_mask,
+    delete_original=False,
+):
     """Convert h5ad file to database format.
     
     Args:
@@ -18,6 +22,8 @@ def h5ad_converter(data_path, db_info_path, sample_id, h5ad_cell, h5ad_spot):
         sample_id (str): sample id.
         h5ad_cell (str): cell-wise h5ad file path.
         h5ad_spot (str): spot-wise h5ad file path.
+        cell_mask (str): cell mask file path.
+        delete_original (bool, optional): whether to delete original files. Defaults to False.
 
     Raises:
         ValueError: sample id already exists in database.
@@ -41,10 +47,7 @@ def h5ad_converter(data_path, db_info_path, sample_id, h5ad_cell, h5ad_spot):
         data_file_names[key] = f'{data_path}{sample_id}-{key}.{ext}'
     
     # rename h5ad file for cell-wise data
-    if h5ad_cell in primary_key_list:
-        shutil.copy2(h5ad_cell, data_file_names['cell'])
-    else:
-        os.rename(h5ad_cell, data_file_names['cell'])
+    shutil.copy2(h5ad_cell, data_file_names['cell'])
     
     # cell-wise data
     cell = sc.read_h5ad(data_file_names['cell'])
@@ -61,13 +64,10 @@ def h5ad_converter(data_path, db_info_path, sample_id, h5ad_cell, h5ad_spot):
         },
     )
     cell_info.to_csv(data_file_names['cell-info'], index=False)
-    # cell_mask  # TODO: save cell mask
+    shutil.copy2(cell_mask, data_file_names['cell-mask'])
     
     # rename h5ad file for spot-wise data
-    if h5ad_spot in primary_key_list:
-        shutil.copy2(h5ad_spot, data_file_names['spot'])
-    else:
-        os.rename(h5ad_spot, data_file_names['spot'])
+    shutil.copy2(h5ad_spot, data_file_names['spot'])
     
     # spot-wise data
     spot = sc.read_h5ad(data_file_names['spot'])
@@ -84,3 +84,8 @@ def h5ad_converter(data_path, db_info_path, sample_id, h5ad_cell, h5ad_spot):
         },
     )
     spot_info.to_csv(data_file_names['spot-info'], index=False)
+    
+    if delete_original:
+        os.remove(h5ad_cell)
+        os.remove(h5ad_spot)
+        os.remove(cell_mask)
