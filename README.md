@@ -21,3 +21,5 @@ pip install -e .
     - [YouTube video](https://www.youtube.com/watch?v=MpGVTmE_As0)
     - [GitHub repo](https://github.com/rapidsai/plotly-dash-rapids-census-demo?ncid=so-yout-411549-vt27#cid=an01_so-yout_en-us)
   - [NVDIA RAPIDS post](https://developer.nvidia.com/blog/accelerated-data-analytics-a-guide-to-data-visualization-with-rapids/)
+- [Use leaflet and react-leaflet as external packages](https://github.com/emilhe/dash-leaflet/pull/146)
+- [Viewport](https://github.com/emilhe/dash-leaflet/blob/master/CHANGELOG.md#107---2023-08-27)

@@ -2,6 +2,7 @@
 
 import os
 import cv2
+import rasterio
 import pandas as pd
 import numpy as np
 from scipy.sparse import load_npz
@@ -415,3 +416,31 @@ class ThorQuery:
         )
         layer = get_leaflet_tile_layer(client)
         return client, layer
+
+    def get_coord_mapping(self, sample_id):
+        """Get coordinate mapping from geographic to pixel.
+        
+        Args:
+            sample_id (str): sample id.
+        
+        Returns:
+            func: coordinate mapping function.
+        """
+        raster = rasterio.open(
+            self.dataset.get_cache_field(sample_id, 'gis-wsi-img'),
+        )
+        return raster.index
+    
+    def get_sample_img_shape(self, sample_id):
+        """Get sample image shape.
+        
+        Args:
+            sample_id (str): sample id.
+        
+        Returns:
+            tuple: height and width.
+        """
+        raster = rasterio.open(
+            self.dataset.get_cache_field(sample_id, 'gis-wsi-img'),
+        )
+        return raster.shape

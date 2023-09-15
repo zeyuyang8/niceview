@@ -2,10 +2,10 @@
 
 import toml
 import json
-import dash_leaflet as dl
 import dash_uploader as du
 from niceview.utils.dataset import ThorQuery
-from dash import Dash, html, dcc
+from niceview.pyplot.leaflet import create_leaflet_map
+from dash import Dash, html, dcc, Input, Output
 
 # config
 config = toml.load('user/config.toml')
@@ -55,6 +55,16 @@ cell_gene_client, cell_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-bl
 cell_type_client, cell_type_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-type-img')
 spot_gene_client, spot_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-spot-gene-img')
 wsi_client, wsi_layer = thor.gis_client_and_layer(sample_id, 'gis-wsi-img')
+mapper = thor.get_coord_mapping(sample_id)
+height, width = thor.get_sample_img_shape(sample_id)
+
+# crate map
+fig = create_leaflet_map(
+    'map',
+    wsi_client,
+    wsi_layer,
+    [(spot_gene_layer, 'spot gene'), (cell_gene_layer, 'cell gene'), (cell_type_layer, 'cell type')],
+)
 
 # app
 app = Dash(
@@ -78,16 +88,16 @@ app.layout = html.Div(
             ],
         ),
         html.Div(
-            id='user-input',
+            id='userInput',
             children=[
                 html.Div(
-                    id='data-upload',
+                    id='dataUpload',
                     children=[
-                        du.Upload(id='upload-image', max_file_size=max_file_size),
+                        du.Upload(id='uploadImage', max_file_size=max_file_size),
                     ],
                 ),
                 html.Div(
-                    id='data-select',
+                    id='dataSelect',
                     children=[
                         dcc.Dropdown(placeholder='Select sample'),
                         dcc.Dropdown(placeholder='Select type of visualization'),
@@ -99,49 +109,66 @@ app.layout = html.Div(
         html.Div(
             id='trigger',
             children=[
-                html.Button('Submit', id='submit-button', n_clicks=0),
+                html.Button('Submit', id='submitButton', n_clicks=0),
             ],
         ),
         html.Div(
-            id='app-container',
-            children=[
-                dl.Map(
-                    id='cell-gene',
-                    children=[
-                        dl.TileLayer(
-                            url=wsi_layer.url,
-                            maxZoom=wsi_client.max_zoom,
-                            minZoom=wsi_client.default_zoom,
-                        ),
-                        dl.LayersControl(
-                            [
-                                dl.Overlay(
-                                    dl.TileLayer(
-                                        url=cell_gene_layer.url,
-                                        maxZoom=cell_gene_client.max_zoom,
-                                        minZoom=cell_gene_client.default_zoom,
-                                    ),
-                                    name=selected_cell_gene_name,
-                                ),
-                            ],
-                        ),
-                        dl.FullScreenControl(),
-                        dl.FeatureGroup(
-                            [
-                                dl.EditControl(),
-                            ],
-                        ),
-                    ],
-                    center=[cell_gene_client.center()[0], cell_gene_client.center()[1]],
-                    zoom=cell_gene_client.default_zoom + 0.5,
-                    style={'height': '70vh', 'margin': 'auto', 'display': 'block'},
-                    attributionControl=False,
-                ),
-            ],
+            id='mainView',
+            children=fig,
             style={'width': '70vh', 'height': '70vh'},
         ),
+        html.Div(
+            id='roi',
+            children=[
+                html.Div(
+                    id='coordinates',
+                ),
+            ],
+        ),
+        html.Div(id='currentInfo'),
     ],
 )
+
+
+@app.callback(
+    Output('coordinates', 'children'),
+    Input('editControl', 'geojson'),
+)
+def save_roi(drawn_geojson):
+    """Save coordinates.
+    
+    Args:
+        drawn_geojson (dict): GeoJSON.
+
+    Returns:
+        json file.
+    """
+    file_name = './user/roi.json'
+    with open(file_name, 'w') as f:
+        json.dump(drawn_geojson, f)
+    
+    return f'{drawn_geojson}'
+
+
+@app.callback(
+    Output('currentInfo', 'children'),
+    Input('map', 'bounds'),
+)
+def display_current_info(viewport):
+    """Display current zoom level and center.
+    
+    Args:
+        viewport (dict): Viewport.
+    
+    Returns:
+        str: Current zoom level and center.
+    """
+    viewport = [[point[1], point[0]] for point in viewport]
+    viewport = [mapper(*point) for point in viewport]
+    viewport = [[height - point[0], point[1]] for point in viewport]
+    # [(row min, col min), (row max, col max)]
+    return f'{viewport}'
+
 
 # run app
 if __name__ == '__main__':

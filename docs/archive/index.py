@@ -6,7 +6,7 @@ from dash import Dash, dcc, html, Input, Output, callback
 from localtileserver import TileClient, get_leaflet_tile_layer
 import numpy as np
 import pandas as pd
-from niceview.pyplot.geoplot import scatter_overlay_gis
+from niceview.pyplot.plotly import scatter_overlay_gis
 from scipy.sparse import load_npz
 from niceview.utils.tools import normalize_array, select_col_from_name, txt_to_list
 from niceview.utils.raster import geo_raster_to_meshgrid, index_to_meshgrid_coord
