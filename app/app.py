@@ -43,6 +43,7 @@ thor.cell_gis(
     sample_id,
     selected_cell_gene_name,
     label_analysis=True,
+    heatmap_analysis=True,
 )
 thor.spot_gis(
     sample_id,
@@ -53,6 +54,7 @@ thor.wsi_gis(sample_id)
 # gis
 cell_gene_client, cell_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-img')
 cell_type_client, cell_type_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-type-img')
+cell_heatmap_client, cell_heatmap_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-heatmap-img')
 spot_gene_client, spot_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-spot-gene-img')
 wsi_client, wsi_layer = thor.gis_client_and_layer(sample_id, 'gis-wsi-img')
 mapper = thor.get_coord_mapping(sample_id)
@@ -63,7 +65,13 @@ fig = create_leaflet_map(
     'map',
     wsi_client,
     wsi_layer,
-    [(spot_gene_layer, 'spot gene'), (cell_gene_layer, 'cell gene'), (cell_type_layer, 'cell type')],
+    [
+        (spot_gene_layer, 'spot gene'), 
+        (cell_gene_layer, 'cell gene'), 
+        (cell_type_layer, 'cell type'),
+        (cell_heatmap_layer, 'cell heatmap'),
+    ],
+    cmax=thor.get_gene_max(sample_id, selected_cell_gene_name),
 )
 
 # app
