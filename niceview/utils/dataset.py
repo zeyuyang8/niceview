@@ -136,14 +136,14 @@ class ThorQuery:
             primary_key_list,
         )
     
-    def cell_analysis(self, sample_id, selected_cell_gene_name=None, label_analysis=False, heatmap=True):
+    def cell_analysis(self, sample_id, selected_cell_gene_name=None, label_analysis=False, pathway='jk'):
         """Cell gene analysis.
         
         Args:
             sample_id (str): sample id.
             selected_cell_gene_name (str): list of selected cell gene name.
             label_analysis (bool): whether to label the cell.
-            heatmap (bool): whether to generate heatmap.
+            pathway (str): pathway.
         """
         cell_info = pd.read_csv(
             self.dataset.get_data_field(sample_id, 'cell-info'),
@@ -211,8 +211,36 @@ class ThorQuery:
                 )
         
         # heatmap
-        if heatmap:
-            color = np.array(cell_selected_gene_norm).ravel()
+        if pathway:
+            # cell_gene = load_npz(
+            #     self.dataset.get_data_field(sample_id, 'cell-gene'),
+            # )
+            # cell_gene_name = txt_to_list(
+            #     self.dataset.get_data_field(sample_id, 'cell-gene-name'),
+            # )
+            # cell_selected_gene = select_col_from_name(
+            #     cell_gene, cell_gene_name, selected_cell_gene_name,
+            # )
+            # cell_selected_gene_norm = normalize_array(cell_selected_gene, CMIN, CMAX)
+            
+            # color = np.array(cell_selected_gene_norm).ravel()
+            
+            ##########################################################################################
+            # cell_pathway = load_npz(
+            #     self.dataset.get_data_field(sample_id, 'cell-pathway'),
+            # )
+            # cell_pathway_name = txt_to_list(
+            #     self.dataset.get_data_field(sample_id, 'cell-pathway-name'),
+            # )
+            # cell_selected_pathway = select_col_from_name(
+            #     cell_pathway, cell_pathway_name, selected_cell_pathway_name,
+            # )
+            # cell_selected_pathway_norm = normalize_array(cell_selected_pathway, CMIN, CMAX)
+            
+            # color = np.array(cell_selected_pathway_norm).ravel()
+            
+            color = np.load('/home/tom/github/niceview/db/data/pathway2.npy')
+            color = normalize_array(color, CMIN, CMAX)
             if not os.path.exists(self.dataset.get_cache_field(sample_id, 'cell-gene-heatmap-img')):
                 image = PIL.Image.open(self.dataset.get_data_field(sample_id, 'wsi-img'))
                 xmax, ymax = image.size
