@@ -11,11 +11,11 @@ from scipy.sparse import load_npz
 from scipy.interpolate import griddata
 from scipy.ndimage import gaussian_filter
 from localtileserver import TileClient, get_leaflet_tile_layer
-from niceview.utils.tools import txt_to_list, select_col_from_name, normalize_array
+from niceview.utils.tools import txt_to_list, select_col_from_name, normalize_array, blend, draw_circles
 from niceview.utils.tools import mask_filter_relabel, mask_to_image, discrete_cmap_from_hex
-from niceview.utils.tools import blend, draw_circles
 from niceview.utils.raster import geo_ref_raster
 from niceview.utils.cell import get_nuclei_pixels
+from niceview.pyplot.heatmap import heatmap_from_scatter
 
 CMAX = 255
 CMIN = 1  # avoid zero to distinguish from background
@@ -257,7 +257,7 @@ class ThorQuery:
             if not os.path.exists(self.dataset.get_cache_field(sample_id, 'cell-gene-heatmap-img')):
                 image = PIL.Image.open(self.dataset.get_data_field(sample_id, 'wsi-img'))
                 xmax, ymax = image.size
-                pathway_heatmap(
+                heatmap_from_scatter(
                     (xmax, ymax), cell_pos, color, 
                     self.dataset.get_cache_field(sample_id, 'cell-gene-heatmap-img'),
                 )        
