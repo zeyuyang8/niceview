@@ -1,11 +1,12 @@
 """App."""
 
-import toml
 import json
+import shutil
+import toml
 import dash_uploader as du
 from niceview.utils.dataset import ThorQuery
 from niceview.pyplot.leaflet import create_leaflet_map
-from dash import Dash, html, dcc, Input, Output
+from dash import Dash, html, dcc, Input, Output, State
 
 # config
 config = toml.load('user/config.toml')
@@ -115,15 +116,21 @@ app.layout = html.Div(
             ],
         ),
         html.Div(
-            id='trigger',
-            children=[
-                html.Button('Submit', id='submitButton', n_clicks=0),
-            ],
-        ),
-        html.Div(
             id='mainView',
             children=fig,
             style={'width': '70vh', 'height': '70vh'},
+        ),
+        html.Br(),
+        html.Div(
+            [
+                dcc.Input(
+                    id='newFilename',
+                    type='text',
+                    placeholder='Please enter a name',
+                ),
+                html.Button('Save', id='saveButton', n_clicks=0),
+                html.Div(id='outputMessage'),
+            ],
         ),
         html.Div(
             id='roi',
@@ -140,6 +147,26 @@ app.layout = html.Div(
         html.Div(id='currentInfo'),
     ],
 )
+
+
+@app.callback(
+    Output('outputMessage', 'children'),
+    Input('saveButton', 'n_clicks'),
+    State('newFilename', 'value'),
+    prevent_initial_call=True,
+)
+def copy_and_rename_file(n_clicks, new_name):
+    """Copy and rename file.
+    
+    Args:
+        n_clicks (int): Number of clicks.
+        new_name (str): New name.
+    
+    Returns:
+        str: Output message.
+    """
+    shutil.copyfile('./user/coords.json', f'./user/{new_name}.json')
+    return f'File {new_name}.json saved.'
 
 
 @app.callback(

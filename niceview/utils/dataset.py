@@ -6,10 +6,7 @@ import rasterio
 import PIL
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.sparse import load_npz
-from scipy.interpolate import griddata
-from scipy.ndimage import gaussian_filter
 from localtileserver import TileClient, get_leaflet_tile_layer
 from niceview.utils.tools import txt_to_list, select_col_from_name, normalize_array, blend, draw_circles
 from niceview.utils.tools import mask_filter_relabel, mask_to_image, discrete_cmap_from_hex
@@ -20,44 +17,6 @@ from niceview.pyplot.heatmap import heatmap_from_scatter
 CMAX = 255
 CMIN = 1  # avoid zero to distinguish from background
 PIL.Image.MAX_IMAGE_PIXELS = 700000000
-
-
-def pathway_heatmap(image_shape, coords, color, path='heatmap.png'):
-    """Plot a heatmap of the pathway.
-    
-    Args:
-        image_shape (tuple): Shape of the image in ymax, xmax.
-        coords (np.array): Coordinates of the pathway, in the form of (x, y).
-        color (np.array): Color of the pathway.
-        path (str): Path to the image.
-    """
-    xmax, ymax = image_shape
-    
-    ys = np.round(coords[:, 1]).astype(int)
-    xs = np.round(coords[:, 0]).astype(int)
-    zs = color
-    
-    num_intervals = 500
-    xnew = np.linspace(xs.min(), xs.max(), num_intervals)
-    ynew = np.linspace(ys.min(), ys.max(), num_intervals)
-    xmesh, ymesh = np.meshgrid(xnew, ynew)
-    zmesh = griddata((xs, ys), zs, (xmesh, ymesh), method='linear', rescale=True)
-    smoothed_matrix = gaussian_filter(zmesh, 1)
-    
-    fig, ax = plt.subplots()
-    fig.set_facecolor('black')
-    ax.pcolormesh(xmesh, ymesh, smoothed_matrix, alpha=1, cmap='jet')
-    ax.set_facecolor('black')
-    ax.set_aspect('equal')
-    ax.axis('off')
-    ax.set_xlim(0, xmax)
-    ax.set_ylim(ymax, 0)
-    
-    dpi = 2500
-    fig.savefig(path, dpi=dpi, bbox_inches='tight', pad_inches=0)
-    heatmap = cv2.imread(path)
-    resized = cv2.resize(heatmap, (xmax, ymax), interpolation=cv2.INTER_AREA)
-    cv2.imwrite(path, resized)
 
 
 class AristotleDataset:
@@ -258,8 +217,8 @@ class ThorQuery:
                 image = PIL.Image.open(self.dataset.get_data_field(sample_id, 'wsi-img'))
                 xmax, ymax = image.size
                 heatmap_from_scatter(
-                    (xmax, ymax), cell_pos, color, 
-                    self.dataset.get_cache_field(sample_id, 'cell-gene-heatmap-img'),
+                    (xmax, ymax), np.round(cell_pos).astype(int), color, 
+                    dst_path=self.dataset.get_cache_field(sample_id, 'cell-gene-heatmap-img'),
                 )        
     
     def cell_blend(
@@ -447,13 +406,14 @@ class ThorQuery:
         """
         os.remove(self.dataset.get_cache_field(sample_id, cache_field))
 
-    def empty_cache_cell(self, sample_id, gene=False, label=False):
+    def empty_cache_cell(self, sample_id, gene=False, label=False, heatmap=False):
         """Empty cell gene.
         
         Args:
             sample_id (str): sample id.
             gene (bool): whether to empty cell gene.
             label (bool): whether to empty cell label.
+            heatmap (bool): whether to empty cell heatmap.
         """
         if gene:
             self.empty_cache(sample_id, 'mask-cell-gene-img')
@@ -464,6 +424,11 @@ class ThorQuery:
             self.empty_cache(sample_id, 'mask-cell-type-img')
             self.empty_cache(sample_id, 'blend-cell-type-img')
             self.empty_cache(sample_id, 'gis-blend-cell-type-img')
+        
+        if heatmap:
+            self.empty_cache(sample_id, 'cell-gene-heatmap-img')
+            self.empty_cache(sample_id, 'blend-cell-gene-heatmap-img')
+            self.empty_cache(sample_id, 'gis-blend-cell-gene-heatmap-img')
     
     def empty_cache_spot(self, sample_id, gene=False):
         """Empty spot gene.
