@@ -6,12 +6,17 @@ import shutil
 import scanpy as sc
 import scipy
 import pandas as pd
+import numpy as np
 from niceview.utils.tools import list_to_txt
 
 
 def h5ad_converter(
     data_path, db_info_path, sample_id,
-    wsi_img, h5ad_cell=None, h5ad_spot=None, cell_mask=None,
+    wsi_img, 
+    h5ad_cell=None, 
+    h5ad_spot=None, 
+    cell_mask=None,
+    h5ad_cell_pathway=None,
     delete_original=False,
 ):
     """Convert h5ad file to database format.
@@ -24,6 +29,7 @@ def h5ad_converter(
         h5ad_cell (str): cell-wise h5ad file path.
         h5ad_spot (str): spot-wise h5ad file path.
         cell_mask (str): cell mask file path.
+        h5ad_cell_pathway (str): cell-wise h5ad file path for pathway analysis.
         delete_original (bool, optional): whether to delete original files. Defaults to False.
 
     Raises:
@@ -93,6 +99,12 @@ def h5ad_converter(
         )
         spot_info.to_csv(data_file_names['spot-info'], index=False)
     
+    if h5ad_cell_pathway:
+        cell_pathway = sc.read_h5ad(h5ad_cell_pathway)
+        cell_pathway_name = cell_pathway.var_names.to_list()
+        np.save(data_file_names['cell-pathway-matrix'], cell_pathway.X)
+        list_to_txt(cell_pathway_name, data_file_names['cell-pathway-name'])
+    
     if delete_original:
         if h5ad_cell:
             os.remove(h5ad_cell)
@@ -102,7 +114,9 @@ def h5ad_converter(
             os.remove(cell_mask)
         if wsi_img:
             os.remove(wsi_img)
-
+        if h5ad_cell_pathway:
+            os.remove(h5ad_cell_pathway)
+    
 
 def delete_sample(data_path, db_info_path, sample_id):
     """Delete files containing sample id and update database information.
