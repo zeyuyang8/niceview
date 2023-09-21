@@ -54,9 +54,6 @@ thor.spot_gis(
 )
 thor.wsi_gis(sample_id)
 
-# empty cache
-# thor.empty_cache_cell(sample_id, heatmap=True)
-
 # gis
 _, cell_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-img')
 _, cell_type_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-type-img')
