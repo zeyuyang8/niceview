@@ -136,14 +136,15 @@ class ThorQuery:
             primary_key_list,
         )
     
-    def cell_analysis(self, sample_id, selected_cell_gene_name=None, label_analysis=False, pathway='jk'):
+    def cell_analysis(self, sample_id, selected_cell_gene_name=None, label_analysis=False, heatmap=False, selected_pathway=None):
         """Cell gene analysis.
         
         Args:
             sample_id (str): sample id.
             selected_cell_gene_name (str): list of selected cell gene name.
             label_analysis (bool): whether to label the cell.
-            pathway (str): pathway.
+            heatmap (bool): whether to generate heatmap.
+            selected_pathway (str): pathway name.
         """
         cell_info = pd.read_csv(
             self.dataset.get_data_field(sample_id, 'cell-info'),
@@ -211,46 +212,43 @@ class ThorQuery:
                 )
         
         # heatmap
-        if pathway:
-            # cell_gene = load_npz(
-            #     self.dataset.get_data_field(sample_id, 'cell-gene'),
-            # )
-            # cell_gene_name = txt_to_list(
-            #     self.dataset.get_data_field(sample_id, 'cell-gene-name'),
-            # )
-            # cell_selected_gene = select_col_from_name(
-            #     cell_gene, cell_gene_name, selected_cell_gene_name,
-            # )
-            # cell_selected_gene_norm = normalize_array(cell_selected_gene, CMIN, CMAX)
-            
-            # color = np.array(cell_selected_gene_norm).ravel()
-            
-            ##########################################################################################
-            # cell_pathway = load_npz(
-            #     self.dataset.get_data_field(sample_id, 'cell-pathway'),
-            # )
-            # cell_pathway_name = txt_to_list(
-            #     self.dataset.get_data_field(sample_id, 'cell-pathway-name'),
-            # )
-            # cell_selected_pathway = select_col_from_name(
-            #     cell_pathway, cell_pathway_name, selected_cell_pathway_name,
-            # )
-            # cell_selected_pathway_norm = normalize_array(cell_selected_pathway, CMIN, CMAX)
-            
-            # color = np.array(cell_selected_pathway_norm).ravel()
-            
-            color = np.load('/home/tom/github/niceview/db/data/pathway2.npy')
-            color = normalize_array(color, CMIN, CMAX)
+        if heatmap:
+            cell_gene = load_npz(
+                self.dataset.get_data_field(sample_id, 'cell-gene'),
+            )
+            cell_gene_name = txt_to_list(
+                self.dataset.get_data_field(sample_id, 'cell-gene-name'),
+            )
+            cell_selected_gene = select_col_from_name(
+                cell_gene, cell_gene_name, selected_cell_gene_name,
+            )
+            cell_selected_gene_norm = normalize_array(cell_selected_gene, CMIN, CMAX)
+            cell_gene_color = np.array(cell_selected_gene_norm).ravel()
             if not os.path.exists(self.dataset.get_cache_field(sample_id, 'cell-gene-heatmap-img')):
                 image = PIL.Image.open(self.dataset.get_data_field(sample_id, 'wsi-img'))
                 xmax, ymax = image.size
                 heatmap_from_scatter(
-                    (xmax, ymax), np.round(cell_pos).astype(int), color, 
+                    (xmax, ymax), np.round(cell_pos).astype(int), cell_gene_color, 
                     dst_path=self.dataset.get_cache_field(sample_id, 'cell-gene-heatmap-img'),
+                )
+    
+        if selected_pathway:
+            cell_pathway_matrix = np.load(self.dataset.get_data_field(sample_id, 'cell-pathway-matrix'))
+            cell_pathway_name = txt_to_list(self.dataset.get_data_field(sample_id, 'cell-pathway-name'))
+            cell_selected_pathway = select_col_from_name(cell_pathway_matrix, cell_pathway_name, selected_pathway)
+            cell_selected_pathway_norm = normalize_array(cell_selected_pathway, CMIN, CMAX)
+            cell_pathway_color = np.array(cell_selected_pathway_norm).ravel()
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'cell-pathway-heatmap-img')):
+                image = PIL.Image.open(self.dataset.get_data_field(sample_id, 'wsi-img'))
+                xmax, ymax = image.size
+                heatmap_from_scatter(
+                    (xmax, ymax), np.round(cell_pos).astype(int), cell_pathway_color, 
+                    dst_path=self.dataset.get_cache_field(sample_id, 'cell-pathway-heatmap-img'),
                 )        
     
     def cell_blend(
-        self, sample_id, selected_cell_gene_name=None, label_analysis=False, heatmap_analysis=False, mask_opacity=1,
+        self, sample_id, selected_cell_gene_name=None, label_analysis=False, 
+        heatmap_analysis=False, selected_pathway=None, mask_opacity=1,
     ):
         """Cell blend.
 
@@ -259,10 +257,11 @@ class ThorQuery:
             selected_cell_gene_name (str): list of selected cell gene name.
             label_analysis (bool): whether to label the cell.
             heatmap_analysis (bool): whether to generate heatmap.
+            selected_pathway (str): pathway name.
             mask_opacity (float): mask opacity.
         """
         # analysis
-        self.cell_analysis(sample_id, selected_cell_gene_name, label_analysis)
+        self.cell_analysis(sample_id, selected_cell_gene_name, label_analysis, heatmap_analysis, selected_pathway)
         
         if selected_cell_gene_name:
             if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-gene-img')):
@@ -296,9 +295,21 @@ class ThorQuery:
                         0.5,
                     ),
                 )
-
+        
+        if selected_pathway:
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-pathway-heatmap-img')):
+                cv2.imwrite(
+                    self.dataset.get_cache_field(sample_id, 'blend-cell-pathway-heatmap-img'),
+                    blend(
+                        self.dataset.get_data_field(sample_id, 'wsi-img'),
+                        self.dataset.get_cache_field(sample_id, 'cell-pathway-heatmap-img'),
+                        0.5,
+                    ),
+                )
+        
     def cell_gis(
-        self, sample_id, selected_cell_gene_name=None, label_analysis=False, heatmap_analysis=False, mask_opacity=1,
+        self, sample_id, selected_cell_gene_name=None, label_analysis=False, 
+        heatmap_analysis=False, selected_pathway=None, mask_opacity=1,
     ):
         """Cell blend.
 
@@ -307,10 +318,11 @@ class ThorQuery:
             selected_cell_gene_name (str): list of selected cell gene name.
             label_analysis (bool): whether to label the cell.
             heatmap_analysis (bool): whether to generate heatmap.
+            selected_pathway (str): pathway name.
             mask_opacity (float): mask opacity.
         """
         # blend
-        self.cell_blend(sample_id, selected_cell_gene_name, label_analysis, heatmap_analysis, mask_opacity)
+        self.cell_blend(sample_id, selected_cell_gene_name, label_analysis, heatmap_analysis, selected_pathway, mask_opacity)
         
         # georeference images for blended cell selected gene and cell type
         if selected_cell_gene_name:
@@ -331,6 +343,12 @@ class ThorQuery:
                 geo_ref_raster(
                     self.dataset.get_cache_field(sample_id, 'blend-cell-gene-heatmap-img'),
                     self.dataset.get_cache_field(sample_id, 'gis-blend-cell-gene-heatmap-img'),
+                )
+        if selected_pathway:
+            if not os.path.exists(self.dataset.get_cache_field(sample_id, 'gis-blend-cell-pathway-heatmap-img')):
+                geo_ref_raster(
+                    self.dataset.get_cache_field(sample_id, 'blend-cell-pathway-heatmap-img'),
+                    self.dataset.get_cache_field(sample_id, 'gis-blend-cell-pathway-heatmap-img'),
                 )
     
     def spot_analysis(self, sample_id, selected_spot_gene_name, thickness=-1):

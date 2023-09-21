@@ -50,6 +50,8 @@ def select_col_from_name(matrix, name_list, name):
         np.ndarray: column of shape (row,).
     """
     idx = name_list.index(name)
+    if isinstance(matrix, np.ndarray) and matrix.ndim == 2:
+        return matrix[:, idx]
     return matrix.tocsr()[:, idx].todense()
 
 

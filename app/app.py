@@ -29,6 +29,7 @@ with open('./user/args.json') as f:
 sample_id = args['sampleId']
 selected_cell_gene_name = args['selectedCellGeneName']
 selected_spot_gene_name = args['selectedSpotGeneName']
+selected_pathway = args['selectedPathway']
 
 # create instance and analyze data
 thor = ThorQuery(
@@ -45,6 +46,7 @@ thor.cell_gis(
     selected_cell_gene_name,
     label_analysis=True,
     heatmap_analysis=True,
+    selected_pathway=selected_pathway,
 )
 thor.spot_gis(
     sample_id,
@@ -56,10 +58,11 @@ thor.wsi_gis(sample_id)
 # thor.empty_cache_cell(sample_id, heatmap=True)
 
 # gis
-cell_gene_client, cell_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-img')
-cell_type_client, cell_type_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-type-img')
-cell_heatmap_client, cell_heatmap_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-heatmap-img')
-spot_gene_client, spot_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-spot-gene-img')
+_, cell_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-img')
+_, cell_type_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-type-img')
+_, cell_gene_heatmap_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-heatmap-img')
+_, cell_pathway_heatmap_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-pathway-heatmap-img')
+_, spot_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-spot-gene-img')
 wsi_client, wsi_layer = thor.gis_client_and_layer(sample_id, 'gis-wsi-img')
 mapper = thor.get_coord_mapping(sample_id)
 height, width = thor.get_sample_img_shape(sample_id)
@@ -73,7 +76,8 @@ fig = create_leaflet_map(
         (spot_gene_layer, 'spot gene'), 
         (cell_gene_layer, 'cell gene'), 
         (cell_type_layer, 'cell type'),
-        (cell_heatmap_layer, 'cell heatmap'),
+        (cell_gene_heatmap_layer, 'cell gene heatmap'),
+        (cell_pathway_heatmap_layer, 'cell pathway heatmap'),
     ],
     cmax=thor.get_gene_max(sample_id, selected_cell_gene_name),
 )
