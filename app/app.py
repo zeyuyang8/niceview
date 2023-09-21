@@ -1,11 +1,13 @@
 """App."""
 
+import os
 import json
 import shutil
 import toml
 import dash_uploader as du
 from niceview.utils.dataset import ThorQuery
 from niceview.pyplot.leaflet import create_leaflet_map
+from niceview.utils.tools import save_roi_data_img
 from dash import Dash, html, dcc, Input, Output, State
 
 # config
@@ -53,6 +55,7 @@ thor.spot_gis(
     selected_spot_gene_name,
 )
 thor.wsi_gis(sample_id)
+cell_adata, wsi_img = thor.get_cell_adata_and_img(sample_id)
 
 # gis
 _, cell_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-img')
@@ -169,8 +172,15 @@ def copy_and_rename_file(n_clicks, new_name):
     Returns:
         str: Output message.
     """
-    shutil.copyfile('./user/coords.json', f'./user/{new_name}.json')
-    return f'File {new_name}.json saved.'
+    dir_path = f'./user/{new_name}/'
+    os.mkdir(dir_path)
+    coord_path = os.path.join(dir_path, 'coords.json')
+    shutil.copyfile('./user/coords.json', coord_path)
+    with open(coord_path, 'r') as f:
+        coords = json.load(f)
+    
+    save_roi_data_img(coords, cell_adata, wsi_img, dir_path)
+    return f'data of {new_name} is saved.'
 
 
 @app.callback(

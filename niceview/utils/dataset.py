@@ -6,6 +6,7 @@ import rasterio
 import PIL
 import pandas as pd
 import numpy as np
+import scanpy as sc
 from scipy.sparse import load_npz
 from localtileserver import TileClient, get_leaflet_tile_layer
 from niceview.utils.tools import txt_to_list, select_col_from_name, normalize_array, blend, draw_circles
@@ -554,3 +555,21 @@ class ThorQuery:
             cell_gene, cell_gene_name, selected_cell_gene_name,
         )
         return float(cell_selected_gene.max())
+
+    def get_cell_adata_and_img(self, sample_id):
+        """Get cell adata.
+        
+        Args:
+            sample_id (str): sample id.
+        
+        Returns:
+            anndata.AnnData: cell adata.
+            numpy.ndarray: image.
+        """
+        cell_adata = sc.read_h5ad(
+            self.dataset.get_data_field(sample_id, 'cell'),
+        )
+        img = cv2.imread(
+            self.dataset.get_data_field(sample_id, 'wsi-img'),
+        )
+        return cell_adata, img

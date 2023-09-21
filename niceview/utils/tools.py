@@ -4,6 +4,8 @@ from niceview.utils.cell import paint_regions
 import numpy as np
 from scipy.sparse import load_npz
 import cv2
+from shapely.geometry import Point, Polygon
+import os
 
 
 def txt_to_list(txt_file):
@@ -234,3 +236,41 @@ def blend(img_path, mask_path, mask_opacity):
     mask_ovelay = cv2.addWeighted(mask_img, mask_opacity, bkgd_blend, 1.0 - mask_opacity, 0)
     whole_img = cv2.addWeighted(mask_ovelay, 1.0, bkgd_non_blend, 1.0, 0)
     return whole_img
+
+
+def get_bounding_box(coords):
+    """Get bounding box of coordinates.
+    
+    Args:
+        coords (list of tuple): list of coordinates.
+    
+    Returns:
+        tuple: bounding box.
+    """
+    x_coords, y_coords = zip(*coords)
+    x1, y1 = min(x_coords), min(y_coords)
+    x2, y2 = max(x_coords), max(y_coords)
+    return x1, y1, x2, y2
+
+
+def save_roi_data_img(coords, adata, img, home_dir):
+    """Get roi from coordinates.
+    
+    Args:
+        coords (list of tuple): list of coordinates.
+        adata (anndata.AnnData): anndata.
+        img (np.ndarray): image.
+        home_dir (str): home directory.
+    """
+    for idx, coord in enumerate(coords):
+        # save adata
+        roi = Polygon(coord)
+        locs = list(map(lambda x: roi.contains(Point(x)), adata.obsm['spatial']))
+        to_keep = adata[locs].copy()
+        h5ad_path = os.path.join(home_dir, f'roi-{idx}.h5ad')
+        to_keep.write_h5ad(h5ad_path)
+        
+        # save image
+        x1, y1, x2, y2 = get_bounding_box(coord)
+        cropped_region = img[y1:y2, x1:x2]
+        cv2.imwrite(os.path.join(home_dir, f'roi-{idx}.tiff'), cropped_region)
