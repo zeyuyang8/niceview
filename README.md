@@ -8,8 +8,8 @@ sudo apt-get install libgtk2.0-dev
 ```
 
 ```bash
-conda create -n niceview python==3.9
-source activate niceview
+conda create -n view python==3.9
+conda activate view
 pip install -r requirements.txt
 pip install -e .
 ```
