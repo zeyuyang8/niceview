@@ -58,30 +58,42 @@ def h5ad_converter(
     
     # rename h5ad file for cell-wise data
     if h5ad_cell:
-        shutil.copy2(h5ad_cell, data_file_names['cell'])
+        os.rename(h5ad_cell, data_file_names['cell'])
         
         # cell-wise data
         cell = sc.read_h5ad(data_file_names['cell'])
-        scipy.sparse.save_npz(data_file_names['cell-gene'], cell.X)
+        if isinstance(cell.X, np.ndarray):
+            scipy.sparse.save_npz(data_file_names['cell-gene'], scipy.sparse.csr_matrix(cell.X))
+        elif isinstance(cell.X, scipy.sparse.csr.csr_matrix):
+            scipy.sparse.save_npz(data_file_names['cell-gene'], cell.X)
         cell_gene_name = cell.var_names.to_list()
         list_to_txt(cell_gene_name, data_file_names['cell-gene-name'])
         cell_centroid = cell.obsm['spatial']
-        cell_type = cell.obs['cell_type'].to_list()
-        cell_info = pd.DataFrame(
-            {
-                'x': cell_centroid[:, 0],
-                'y': cell_centroid[:, 1],
-                'label': cell_type,
-            },
-        )
-        cell_info.to_csv(data_file_names['cell-info'], index=False)
+        if 'cell_type' in cell.obs.columns:
+            cell_type = cell.obs['cell_type'].to_list()
+            cell_info = pd.DataFrame(
+                {
+                    'x': cell_centroid[:, 0],
+                    'y': cell_centroid[:, 1],
+                    'label': cell_type,
+                },
+            )
+            cell_info.to_csv(data_file_names['cell-info'], index=False)
+        else:
+            cell_info = pd.DataFrame(
+                {
+                    'x': cell_centroid[:, 0],
+                    'y': cell_centroid[:, 1],
+                },
+            )
+            cell_info.to_csv(data_file_names['cell-info'], index=False)
     
     if cell_mask:
         shutil.copy2(cell_mask, data_file_names['cell-mask'])
     
     if h5ad_spot:
         # rename h5ad file for spot-wise data
-        shutil.copy2(h5ad_spot, data_file_names['spot'])
+        os.rename(h5ad_spot, data_file_names['spot'])
         
         # spot-wise data
         spot = sc.read_h5ad(data_file_names['spot'])
@@ -106,10 +118,10 @@ def h5ad_converter(
         list_to_txt(cell_pathway_name, data_file_names['cell-pathway-name'])
     
     if delete_original:
-        if h5ad_cell:
-            os.remove(h5ad_cell)
-        if h5ad_spot:
-            os.remove(h5ad_spot)
+        # if h5ad_cell:
+        #     os.remove(h5ad_cell)
+        # if h5ad_spot:
+        #     os.remove(h5ad_spot)
         if cell_mask:
             os.remove(cell_mask)
         if wsi_img:

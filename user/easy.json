@@ -1,0 +1,8 @@
+{
+    "sampleId": "big-fella",
+    "selectedCellGeneName": "MMP23B",
+    "selectedSpotGeneName": "ENSG00000128607",
+    "selectedPathway": "ADIPOGENESIS",
+    "maskOpacity": 0.5,
+    "colorMap": "jet"
+}

@@ -5,17 +5,17 @@ import skimage.measure
 from sklearn.neighbors import NearestNeighbors
 
 
-def get_nuclei_pixels(cm, ad_cell_pos):
+def get_nuclei_pixels(cm, ad_cell_pos, tol=1):
     """Get nuclei pixels.
     
     Args:
         cm (np.ndarray): Cell mask.
         ad_cell_pos (np.ndarray): Adherent cell positions.
+        tol (int, optional): Tolerance. Defaults to 1.
     
     Returns:
         list: Nuclei region pixels.
     """
-    tol = 1e-6
     regions = skimage.measure.regionprops(cm)
     xy = np.array([r.centroid[::-1] for r in regions])
     nbrs = NearestNeighbors(n_neighbors=1).fit(xy)
