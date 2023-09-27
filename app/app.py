@@ -5,10 +5,13 @@ import json
 import shutil
 import toml
 import dash_uploader as du
+import numpy as np
+import plotly.graph_objects as go
+from dash import Dash, html, dcc, Input, Output, State
+from shapely.geometry import Point, Polygon
 from niceview.utils.dataset import ThorQuery
 from niceview.pyplot.leaflet import create_leaflet_map
 from niceview.utils.tools import save_roi_data_img
-from dash import Dash, html, dcc, Input, Output, State
 
 # config
 config = toml.load('user/config.toml')
@@ -139,6 +142,17 @@ app.layout = html.Div(
                 html.Div(id='outputMessage'),
             ],
         ),
+        html.Br(),
+        html.Div(
+            [
+                dcc.Input(
+                    id='colIdx',
+                    type='number',
+                    placeholder=1,
+                ),
+                html.Button('Plot', id='plotButton', n_clicks=0),
+            ],
+        ),
         html.Div(
             id='roi',
             children=[
@@ -152,6 +166,8 @@ app.layout = html.Div(
             ],
         ),
         html.Div(id='currentInfo'),
+        html.Div(id='hist'),
+        html.Div(id='stats'),
     ],
 )
 
@@ -232,6 +248,74 @@ def display_current_info(viewport):
     viewport = [[point[1], point[0]] for point in viewport]
     viewport = [mapper(*point) for point in viewport]
     return f'{viewport}'
+
+
+@app.callback(
+    Output('hist', 'children'),
+    Output('stats', 'children'),
+    Input('saveButton', 'n_clicks'),
+    Input('editControl', 'geojson'),
+    State('colIdx', 'value'),
+    prevent_initial_call=True,
+)
+def plot_stats(n_clicks, drawn_geojson, idx):
+    """Plot stats.
+    
+    Args:
+        n_clicks (int): number of clicks.
+        drawn_geojson (dict): GeoJSON.
+        idx (int): index.
+    
+    Returns:
+        fig: Figure.
+    """
+    coords = []
+    for region in drawn_geojson['features']:
+        temp = region['geometry']['coordinates'][0]
+        temp = [mapper(*point) for point in temp]
+        temp = [[point[1], point[0]] for point in temp]  # y, x -> x, y
+        coords.append(temp)
+    
+    target = np.array([])
+    for coord in coords:
+        roi = Polygon(coord)
+        locs = list(map(lambda x: roi.contains(Point(x)), cell_adata.obsm['spatial']))
+        to_keep = cell_adata[locs].copy()
+        array = to_keep.X[:, idx].ravel()
+        target = np.concatenate((target, array))
+    
+    hist = go.Figure(
+        data=go.Histogram(
+            x=target,
+        ),
+        layout=go.Layout(
+            title='Histogram',
+            xaxis={'title': 'Gene expression'},
+            yaxis={'title': 'Number of cells'},
+        ),
+    )
+    
+    table = go.Figure(
+        data=go.Table(
+            header={
+                'values': ['Mean', 'Median', 'Std'],
+                'align': 'center',
+            },
+            cells={
+                'values': [
+                    np.round(np.mean(target), 2),
+                    np.round(np.median(target), 2),
+                    np.round(np.std(target), 2),
+                ],
+                'align': 'center',
+            },
+        ),
+        layout=go.Layout(
+            title='Statistics',
+        ),
+    )
+    
+    return dcc.Graph(figure=hist), dcc.Graph(figure=table)
 
 
 # run app

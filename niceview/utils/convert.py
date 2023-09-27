@@ -62,6 +62,13 @@ def h5ad_converter(
         
         # cell-wise data
         cell = sc.read_h5ad(data_file_names['cell'])
+        
+        # save simple h5ad file
+        x = pd.DataFrame(cell.layers['fineST_20'].toarray(), index=cell.obs_names, columns=cell.var_names)
+        bare = sc.AnnData(x)
+        bare.obsm['spatial'] = cell.obsm['spatial']
+        bare.write_h5ad(data_file_names['cell-simple'])
+        
         if isinstance(cell.X, np.ndarray):
             scipy.sparse.save_npz(data_file_names['cell-gene'], scipy.sparse.csr_matrix(cell.X))
         elif isinstance(cell.X, scipy.sparse.csr.csr_matrix):
@@ -118,10 +125,6 @@ def h5ad_converter(
         list_to_txt(cell_pathway_name, data_file_names['cell-pathway-name'])
     
     if delete_original:
-        # if h5ad_cell:
-        #     os.remove(h5ad_cell)
-        # if h5ad_spot:
-        #     os.remove(h5ad_spot)
         if cell_mask:
             os.remove(cell_mask)
         if wsi_img:
