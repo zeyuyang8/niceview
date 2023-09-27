@@ -74,10 +74,10 @@ def create_leaflet_map(
                 minZoom=default_zoom,
             ),
             dl.Colorbar(
-                colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomleft',
+                colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomright',
             ),
             dl.LayersControl(
-                overlay_layers, hideSingleBase=True, position='bottomright',
+                overlay_layers, hideSingleBase=True, position='topright',
             ),
             dl.FullScreenControl(),
             dl.FeatureGroup(
@@ -95,6 +95,7 @@ def create_leaflet_map(
                     ),
                 ],
             ),
+            dl.ScaleControl(imperial=False),
         ],
         center=default_center,
         zoom=default_zoom,
