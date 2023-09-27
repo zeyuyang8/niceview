@@ -567,7 +567,7 @@ class ThorQuery:
             numpy.ndarray: image.
         """
         cell_adata = sc.read_h5ad(
-            self.dataset.get_data_field(sample_id, 'cell'),
+            self.dataset.get_data_field(sample_id, 'cell-simple'),
         )
         img = cv2.imread(
             self.dataset.get_data_field(sample_id, 'wsi-img'),

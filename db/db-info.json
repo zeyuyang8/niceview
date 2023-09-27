@@ -1,6 +1,7 @@
 {
     "data_extension": {
         "cell": "h5ad",
+        "cell-simple": "h5ad",
         "cell-pathway": "h5ad",
         "cell-pathway-name": "txt",
         "cell-pathway-matrix": "npy",
