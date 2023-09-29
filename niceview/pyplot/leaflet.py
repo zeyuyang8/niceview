@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 CMIN = 0
 CMAX = 255
+external_css = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
 
 
 def get_hex_values(colormap_name):
@@ -54,7 +55,7 @@ def create_leaflet_map(
     for arg_layer, arg_name in list_of_layers:
         layer = dl.Overlay(
             dl.TileLayer(
-                opacity=0.5,
+                opacity=1,
                 url=arg_layer.url,
                 maxZoom=max_zoom,
                 minZoom=default_zoom,
@@ -74,11 +75,12 @@ def create_leaflet_map(
                 minZoom=default_zoom,
             ),
             dl.Colorbar(
-                colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomright',
+                colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomleft',
             ),
             dl.LayersControl(
-                overlay_layers, hideSingleBase=True, position='topright',
+                overlay_layers, hideSingleBase=True,
             ),
+            dl.EasyButton(icon="fa-home", id="btn_home"),
             dl.FullScreenControl(),
             dl.FeatureGroup(
                 [
@@ -95,11 +97,11 @@ def create_leaflet_map(
                     ),
                 ],
             ),
-            dl.ScaleControl(imperial=False),
+            dl.EasyButton(icon="fa-save", id="btn_save"),
         ],
         center=default_center,
         zoom=default_zoom,
-        style={'height': '70vh', 'margin': 'auto', 'display': 'block'},
+        style={'height': '850px', 'margin': 'auto', 'display': 'block', 'background': 'black'},
         attributionControl=False,
         trackViewport=True,
     )

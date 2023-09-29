@@ -1,0 +1,279 @@
+/* --------------- Fonts used : Poppins + Abril Fatface --------------- */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&family=Source+Serif+Pro&display=swap');
+/* --------------- Website Theme --------------- */
+:root {
+    --background-container-color: black;
+    --background-color:  rgb(18,74,126);
+    --border-color: lightgrey;
+    --button-color: gray;
+    --text-color: white;
+    --box-shadow:rgba(0, 0, 0, 0.1);
+  }
+  
+
+/* --------------- General Styles --------------- */
+html {
+    scroll-behavior: smooth;
+  }
+*,
+*::before,
+*::after {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+  font-family: " Roboto", sans-serif;
+  /* overflow-y:hidden; */
+  
+}
+
+#body{
+  background-color: var( --background-color);
+}
+
+a {
+  text-decoration: none;
+}
+
+.container{
+  width:100% ;
+  /* margin-top: 100px; */
+  padding-top: 30px;
+  padding-left: 20px;
+  height: auto;
+  background-color: var(--background-container-color);
+  text-align: center;
+}
+
+.button{
+position: relative;
+display: inline-block;
+text-transform: uppercase;
+font-size: 0.85rem;
+letter-spacing: 0.5px;
+border-color: var(--border-color);
+height: 42px;
+width: 70%;
+margin: 1rem 1rem;
+border-radius: 10px;
+color: var( --button-color);
+
+}
+
+.button::after{
+  content: "";
+  position: absolute;
+  width:0;
+  height: 40px;
+  background-color: var(--button-color);
+  right: 0;
+  bottom: 0px;
+  border-radius: 10px;
+
+}
+
+.button:hover{
+  color: var(--text-color);
+  filter: drop-shadow( 0 0 60 var(--button-color));
+  opacity: 100;
+}
+
+.button:hover::after{
+  width: 100%;
+  opacity: 0.3;
+  
+
+}
+
+.upload-data{
+  margin-top: 20px;
+  width: 97%;
+  padding-left: 10px;
+  color: var(--text-color);
+}
+
+.dropdown-input{
+  float: left; 
+  width: 95%;
+  height: 30px;
+  box-sizing: border-box; 
+  margin-left: 10px;
+  margin-top: 5px;
+  border-radius: 10px;
+}
+
+.text{
+  color: var(--text-color);
+}
+/* --------------- header --------------- */
+
+#header {
+    /* padding-top: 300px; */
+    text-align: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    color: var(--text-color);
+    /* z-index: -10; */
+    padding-top: 10px;
+    background-color: var(--background-color);
+    box-shadow: 0 5px 20px 0.1px var(--box-shadow);
+    border-radius: 20px;
+  }
+#logo{
+    padding-top: 20px;
+    display: inline-block;
+    font-size: 40px;
+
+}
+#description{
+    /* position: relative;*/
+    display: inline-block; 
+    font-size: 17px;
+    padding-left: 50px;
+}
+
+
+/* --------------- Graph and visualize --------------- */
+
+#left-column {
+    float: left; 
+    width: 75%;
+    height: 900px;
+    background-color: var(--background-container-color);
+    box-sizing: border-box; 
+  }
+  
+
+/* #right-column {
+  float: left;
+  background-color: transparent;
+  box-sizing: border-box; 
+  width: 39%;
+  height: 900px;
+} */
+
+#submit-container{
+  padding-top: 50px;
+  float: left;
+  background-color: var(--background-color);
+  box-sizing: border-box; 
+  width: 23%;
+  height:870px;
+  box-shadow: 0 5px 20px 0.1px var(--box-shadow);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  border-radius: 15px;
+}
+
+
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+  /* --------------- upload data --------------- */
+
+
+  /* --------------- gene submission --------------- */
+  #submit-gene-button{
+    float: left; 
+    width: 30%;
+    margin: 0rem 0rem ;
+    margin-left: 10px;
+    box-sizing: border-box; 
+  }
+
+
+
+
+/* --------------- Footer --------------- */
+
+#footer{
+  margin-top: 20px;
+  padding-top: 30px;
+  height: 120px;
+  text-align: center;
+  font-size: smaller;
+  background-color: var(--background-color);
+  box-shadow: 0 5px 20px 0.1px var(--box-shadow);
+  color:var(--text-color)
+}
+
+.fa{
+  color: black;
+  font-size: x-small;
+}
+
+.fa-github{
+  color: var(--text-color);
+  margin-left: -5px;
+}
+.fa-linkedin-square{
+  color: var(--text-color);
+  padding-left: 10px;
+}
+
+.fa-twitter{
+  color: var(--text-color);
+  padding-left: 10px;
+}
+
+.text{
+  padding-top: 5px;
+}
+
+
+/* ---- Triangle Animation ------- */
+
+.fa-dna{
+    margin-top: -100px;
+    font-size: 80px;
+    transition: 2s;
+    user-select: none;
+    color: transparent;
+    opacity: 0.5;
+    width: 0;
+    height: 10px;
+}
+.fa-dna:hover {
+    transition: 0s;
+    width: 0;
+    height: 0;
+    filter: drop-shadow(0 0 50px var(--text-color));
+    color: white;
+    opacity: 100;
+  }
+.dna_animation{
+    margin-top: -400px;
+    position: fixed;
+    z-index: -3;
+    width: 100%;
+}
+#left{
+    float: left;
+    padding-top: 30px; 
+    width: 50%;
+    background-color: transparent;
+    box-sizing: border-box; 
+}
+#right{
+    float: left;
+    background-color: transparent;
+    box-sizing: border-box; 
+    width: 50%;
+}
+#graph-left{
+    /* width: 100%; */
+    width: 20%;
+}
+
+#graph-right{
+    width: 20%;
+}
+

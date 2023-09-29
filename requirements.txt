@@ -1,38 +1,12 @@
-# Data science
-pandas
-numpy
-opencv-python
-supervision
-scikit-learn
-scikit-image
-shapely
-
-# Bioinformatics
-scanpy
-
-# Visualization
-matplotlib
-dash
-dash-uploader
-dash_leaflet
-
-# Big data
-datashader
-
-# Map service
-rasterio
-geojsoncontour
-localtileserver
-
-# Jupyter
-jupyter
-ipykernel
-ipyleaflet
-ipywidgets
-nbformat
-
-# Linting
-wemake-python-styleguide
-
-# Configuration
-toml
+scanpy==1.9.5
+scikit-image==0.21.0
+opencv-python==4.8.0.76
+shapely==2.0.1
+rasterio==1.3.8
+localtileserver==0.7.1
+dash_leaflet==1.0.9
+toml==0.10.2
+dash_uploader==0.6.0
+dash_loading_spinners==1.0.0
+ipyleaflet==0.17.4
+packaging==21.3

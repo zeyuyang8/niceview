@@ -1,8 +1,7 @@
 [path]
-db = '/home/tom/github/niceview/db/'
-data = '/home/tom/github/niceview/db/data/'
-cache = '/home/tom/github/niceview/db/cache/'
-plot = '/home/tom/github/niceview/db/plot/'
+data = '../db/data/'
+cache = '../db/cache/'
+plot = '../db/plot/'
 
 [constant]
 cmin = 0

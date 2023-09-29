@@ -1,0 +1,14 @@
+{
+    "sampleId": "gt-iz-p9-rep2",
+    "fileName": "file-name",
+    "selectedCellGeneName": "ENSG00000065534",
+    "selectedSpotGeneName": "ENSG00000065534",
+    "selectedPathway": "ADIPOGENESIS",
+    "maskOpacity": 0.5,
+    "colorMap": "jet",
+    "sampleIdFile": "gt-iz-p9-rep2-file-name",
+    "sampleIdSpotGene": "gt-iz-p9-rep2-ENSG00000065534",
+    "sampleIdCellGene":"gt-iz-p9-rep2-ENSG00000065534",
+    "sampleIdPathway": "gt-iz-p9-rep2-ADIPOGENESIS",
+    "heightWidth": []
+}

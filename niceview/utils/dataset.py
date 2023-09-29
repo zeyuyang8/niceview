@@ -3,21 +3,25 @@
 import os
 import cv2
 import rasterio
-import PIL
 import pandas as pd
 import numpy as np
 import scanpy as sc
+import PIL
+from PIL import Image
 from scipy.sparse import load_npz
 from localtileserver import TileClient, get_leaflet_tile_layer
-from niceview.utils.tools import txt_to_list, select_col_from_name, normalize_array, blend, draw_circles
+from niceview.utils.tools import txt_to_list, select_col_from_name, normalize_array
 from niceview.utils.tools import mask_filter_relabel, mask_to_image, discrete_cmap_from_hex
+from niceview.utils.tools import blend, draw_circles
 from niceview.utils.raster import geo_ref_raster
 from niceview.utils.cell import get_nuclei_pixels
 from niceview.pyplot.heatmap import heatmap_from_scatter
+from scipy import ndimage
+import scipy
 
+Image.MAX_IMAGE_PIXELS = None
 CMAX = 255
 CMIN = 1  # avoid zero to distinguish from background
-PIL.Image.MAX_IMAGE_PIXELS = 700000000
 
 
 class AristotleDataset:
@@ -52,8 +56,8 @@ class AristotleDataset:
         Raises:
             ValueError: bad input primary key.
         """
-        if primary_key not in self.primary_key_list:
-            raise ValueError('Bad input primary key')
+        # if primary_key not in self.primary_key_list:
+        #     raise ValueError('Bad input primary key')
         
         filename = self._unparse_filename(primary_key, data_field, self.data_extension[data_field])
         filepath = os.path.join(self.data_dir, filename)
@@ -72,8 +76,8 @@ class AristotleDataset:
         Raises:
             ValueError: bad input primary key.
         """
-        if primary_key not in self.primary_key_list:
-            raise ValueError('Bad input primary key')
+        # if primary_key not in self.primary_key_list:
+        #     raise ValueError('Bad input primary key')
         
         filename = self._unparse_filename(
             primary_key, cache_field, self.cache_extension[cache_field],
@@ -232,7 +236,7 @@ class ThorQuery:
                     (xmax, ymax), np.round(cell_pos).astype(int), cell_gene_color, 
                     dst_path=self.dataset.get_cache_field(sample_id, 'cell-gene-heatmap-img'),
                 )
-    
+
         if selected_pathway:
             cell_pathway_matrix = np.load(self.dataset.get_data_field(sample_id, 'cell-pathway-matrix'))
             cell_pathway_name = txt_to_list(self.dataset.get_data_field(sample_id, 'cell-pathway-name'))
@@ -245,12 +249,9 @@ class ThorQuery:
                 heatmap_from_scatter(
                     (xmax, ymax), np.round(cell_pos).astype(int), cell_pathway_color, 
                     dst_path=self.dataset.get_cache_field(sample_id, 'cell-pathway-heatmap-img'),
-                )        
+                )
     
-    def cell_blend(
-        self, sample_id, selected_cell_gene_name=None, label_analysis=False, 
-        heatmap_analysis=False, selected_pathway=None, mask_opacity=1,
-    ):
+    def cell_blend(self, sample_id, selected_cell_gene_name=None, label_analysis=False,heatmap_analysis=False, selected_pathway=None, mask_opacity=1):
         """Cell blend.
 
         Args:
@@ -285,7 +286,7 @@ class ThorQuery:
                         mask_opacity,
                     ),
                 )
-        
+
         if heatmap_analysis:
             if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-gene-heatmap-img')):
                 cv2.imwrite(
@@ -307,11 +308,8 @@ class ThorQuery:
                         0.5,
                     ),
                 )
-        
-    def cell_gis(
-        self, sample_id, selected_cell_gene_name=None, label_analysis=False, 
-        heatmap_analysis=False, selected_pathway=None, mask_opacity=1,
-    ):
+
+    def cell_gis(self, sample_id, selected_cell_gene_name=None, label_analysis=False, heatmap_analysis=False, selected_pathway=None, mask_opacity=1):
         """Cell blend.
 
         Args:
@@ -351,7 +349,8 @@ class ThorQuery:
                     self.dataset.get_cache_field(sample_id, 'blend-cell-pathway-heatmap-img'),
                     self.dataset.get_cache_field(sample_id, 'gis-blend-cell-pathway-heatmap-img'),
                 )
-    
+
+
     def spot_analysis(self, sample_id, selected_spot_gene_name, thickness=-1):
         """Spot analysis.
         
@@ -453,29 +452,37 @@ class ThorQuery:
         """
         os.remove(self.dataset.get_cache_field(sample_id, cache_field))
 
-    def empty_cache_cell(self, sample_id, gene=False, label=False, heatmap=False):
+    def empty_cache_cell(self, sample_id, gene=False, label=False, heatmap=False, pathway=False):
         """Empty cell gene.
         
         Args:
             sample_id (str): sample id.
             gene (bool): whether to empty cell gene.
             label (bool): whether to empty cell label.
-            heatmap (bool): whether to empty cell heatmap.
         """
-        if gene:
-            self.empty_cache(sample_id, 'mask-cell-gene-img')
-            self.empty_cache(sample_id, 'blend-cell-gene-img')
-            self.empty_cache(sample_id, 'gis-blend-cell-gene-img')
+        try:
+            if gene:
+                self.empty_cache(sample_id, 'mask-cell-gene-img')
+                self.empty_cache(sample_id, 'blend-cell-gene-img')
+                self.empty_cache(sample_id, 'gis-blend-cell-gene-img')
 
-        if label:
-            self.empty_cache(sample_id, 'mask-cell-type-img')
-            self.empty_cache(sample_id, 'blend-cell-type-img')
-            self.empty_cache(sample_id, 'gis-blend-cell-type-img')
-        
-        if heatmap:
-            self.empty_cache(sample_id, 'cell-gene-heatmap-img')
-            self.empty_cache(sample_id, 'blend-cell-gene-heatmap-img')
-            self.empty_cache(sample_id, 'gis-blend-cell-gene-heatmap-img')
+            if label:
+                self.empty_cache(sample_id, 'mask-cell-type-img')
+                self.empty_cache(sample_id, 'blend-cell-type-img')
+                self.empty_cache(sample_id, 'gis-blend-cell-type-img')
+
+            if heatmap:
+                self.empty_cache(sample_id, 'cell-gene-heatmap-img')
+                self.empty_cache(sample_id, 'blend-cell-gene-heatmap-img')
+                self.empty_cache(sample_id, 'gis-blend-cell-gene-heatmap-img')
+
+            if pathway:
+                self.empty_cache(sample_id, 'cell-pathway-heatmap-img')
+                self.empty_cache(sample_id, 'blend-cell-pathway-heatmap-img')
+                self.empty_cache(sample_id, 'gis-blend-cell-pathway-heatmap-img')
+                
+        except FileNotFoundError:
+            pass
     
     def empty_cache_spot(self, sample_id, gene=False):
         """Empty spot gene.
@@ -484,10 +491,14 @@ class ThorQuery:
             sample_id (str): sample id.
             gene (bool): whether to empty spot gene.
         """
-        if gene:
-            self.empty_cache(sample_id, 'circle-spot-gene-img')
-            self.empty_cache(sample_id, 'blend-spot-gene-img')
-            self.empty_cache(sample_id, 'gis-blend-spot-gene-img')
+        try:
+            if gene:
+                self.empty_cache(sample_id, 'circle-spot-gene-img')
+                self.empty_cache(sample_id, 'blend-spot-gene-img')
+                self.empty_cache(sample_id, 'gis-blend-spot-gene-img')
+
+        except FileNotFoundError:
+            pass
 
     def gis_client_and_layer(self, sample_id, cache_field):
         """GIS client.
@@ -502,7 +513,7 @@ class ThorQuery:
         """
         client = TileClient(
             self.dataset.get_cache_field(sample_id, cache_field),
-            cors_all=True,
+            cors_all=True, host="0.0.0.0"
         )
         layer = get_leaflet_tile_layer(client)
         return client, layer
@@ -567,9 +578,54 @@ class ThorQuery:
             numpy.ndarray: image.
         """
         cell_adata = sc.read_h5ad(
-            self.dataset.get_data_field(sample_id, 'cell-simple'),
+            self.dataset.get_data_field(sample_id, 'cell'),
         )
         img = cv2.imread(
             self.dataset.get_data_field(sample_id, 'wsi-img'),
         )
         return cell_adata, img
+    
+    
+    def process_data(self, sample_id,  height_width=None, img_path=None, mask_path=None, adata_path=None):
+        
+        if height_width is not None:
+            height = height_width[0]
+            width = height_width[1]
+            max_dim = max(height, width)
+            resize_factor = 10000 / max_dim
+        if img_path is not None:
+            img = cv2.imread(img_path)
+            print(img_path)
+            height, width, _ = img.shape
+            max_dim = max(height, width)
+            if max_dim < 10000:
+                return height, width
+            sample_id = "temp" + "-" + sample_id 
+            # calculate resize factor
+            resize_factor = 10000 / max_dim
+            resized_img = cv2.resize(img, (int(width * resize_factor), int(height * resize_factor)))
+            # write data
+            cv2.imwrite(self.dataset.get_data_field(sample_id, 'wsi-img'), resized_img)
+        if max_dim < 10000:
+            return  height, width
+        else:
+            if mask_path is not None:
+                # read mask
+                mask = np.array(load_npz(mask_path).todense())
+                original_shape = mask.shape
+                target_shape = (int(height * resize_factor), int(width * resize_factor))  # (height, width) in numpy format
+
+                # resize mask array
+                resized_mask = ndimage.zoom(
+                    mask, (target_shape[0] / original_shape[0], target_shape[1] / original_shape[1]), order=0,
+                )
+                # write data
+                scipy.sparse.save_npz(self.dataset.get_data_field(sample_id, 'cell-mask'), scipy.sparse.csr_matrix(resized_mask))
+            if adata_path is not None:
+                # resize adata
+                adata = sc.read_h5ad(adata_path)
+                adata.obsm['spatial'] = adata.obsm['spatial'] * resize_factor
+                
+                # write data
+                adata.write(self.dataset.get_data_field(sample_id, 'cell-temp'))
+            return  height, width

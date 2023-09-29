@@ -1,0 +1,54 @@
+{
+    "data_extension": {
+        "cell": "h5ad",
+        "cell-pathway": "h5ad",
+        "cell-pathway-name": "txt",
+        "cell-pathway-matrix": "npy",
+        "cell-gene": "npz",
+        "cell-gene-name": "txt",
+        "cell-info": "csv",
+        "cell-mask": "npz",
+        "cell-barcode": "txt",
+        "wsi-img": "tiff",
+        "spot": "h5ad",
+        "spot-gene": "npz",
+        "spot-gene-name": "txt",
+        "spot-info": "csv"
+    },
+    "cache_extension": {
+        "blend-cell-gene-img": "png",
+        "blend-cell-type-img": "png",
+        "blend-spot-gene-img": "png",
+        "blend-cell-pathway-heatmap-img": "png",
+        "cell-pathway-heatmap-img": "png",
+        "cell-gene-heatmap-img": "png",
+        "mask-cell-gene-img": "png",
+        "mask-cell-type-img": "png",
+        "mask-cell-match-region": "npy",
+        "circle-spot-gene-img": "png",
+        "gis-blend-cell-pathway-heatmap-img": "tiff",
+        "gis-blend-cell-gene-heatmap-img": "tiff",
+        "gis-blend-cell-gene-img": "tiff",
+        "gis-blend-cell-type-img": "tiff",
+        "gis-blend-spot-gene-img": "tiff",
+        "gis-wsi-img": "tiff"
+    },
+    "cell_label_encoder": {
+        "none": 2,
+        "aneuploid": 1,
+        "diploid": 3
+    },
+    "cell_label_cmap": {
+        "1": "#d5a567",
+        "2": "#be6ca7",
+        "3": "#047802",
+        "4": "#8bc060",
+        "5": "#879dcf",
+        "6": "#1d8942",
+        "7": "#253166",
+        "8": "#853087"
+    },
+    "primary_key_list": [
+        "gt-iz-p9-rep2"
+    ]
+}

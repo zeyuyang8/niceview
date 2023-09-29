@@ -11,7 +11,6 @@ def get_nuclei_pixels(cm, ad_cell_pos, tol=1):
     Args:
         cm (np.ndarray): Cell mask.
         ad_cell_pos (np.ndarray): Adherent cell positions.
-        tol (int, optional): Tolerance. Defaults to 1.
     
     Returns:
         list: Nuclei region pixels.
