@@ -169,6 +169,20 @@ class ThorQuery:
                 allow_pickle=True,
             )
         
+        # random color
+        if not os.path.exists(self.dataset.get_cache_field(sample_id, 'mask-cell-random-img')):
+            cv2.imwrite(
+                self.dataset.get_cache_field(sample_id, 'mask-cell-random-img'),
+                mask_to_image(
+                    mask_filter_relabel(
+                        self.dataset.get_data_field(sample_id, 'cell-mask'),
+                        cell_matched_region,
+                        np.random.randint(CMIN, CMAX, len(cell_matched_region)),
+                    ),
+                    cv2.COLORMAP_JET,
+                ),
+            )
+        
         # gene
         if selected_cell_gene_name:
             cell_gene = load_npz(
@@ -264,6 +278,17 @@ class ThorQuery:
         # analysis
         self.cell_analysis(sample_id, selected_cell_gene_name, label_analysis, heatmap_analysis, selected_pathway)
         
+        # random color
+        if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-random-img')):
+            cv2.imwrite(
+                self.dataset.get_cache_field(sample_id, 'blend-cell-random-img'),
+                blend(
+                    self.dataset.get_data_field(sample_id, 'wsi-img'),
+                    self.dataset.get_cache_field(sample_id, 'mask-cell-random-img'),
+                    mask_opacity,
+                ),
+            )
+        
         if selected_cell_gene_name:
             if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-gene-img')):
                 cv2.imwrite(
@@ -324,6 +349,13 @@ class ThorQuery:
         """
         # blend
         self.cell_blend(sample_id, selected_cell_gene_name, label_analysis, heatmap_analysis, selected_pathway, mask_opacity)
+        
+        # random color
+        if not os.path.exists(self.dataset.get_cache_field(sample_id, 'gis-blend-cell-random-img')):
+            geo_ref_raster(
+                self.dataset.get_cache_field(sample_id, 'blend-cell-random-img'),
+                self.dataset.get_cache_field(sample_id, 'gis-blend-cell-random-img'),
+            )
         
         # georeference images for blended cell selected gene and cell type
         if selected_cell_gene_name:

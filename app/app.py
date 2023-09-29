@@ -61,6 +61,7 @@ thor.wsi_gis(sample_id)
 cell_adata, wsi_img = thor.get_cell_adata_and_img(sample_id)
 
 # gis
+_, cell_random_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-random-img')
 _, cell_gene_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-img')
 _, cell_type_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-type-img')
 _, cell_gene_heatmap_layer = thor.gis_client_and_layer(sample_id, 'gis-blend-cell-gene-heatmap-img')
@@ -77,6 +78,7 @@ fig = create_leaflet_map(
     wsi_layer,
     [
         (spot_gene_layer, 'spot gene'), 
+        (cell_random_layer, 'cell random'),
         (cell_gene_layer, 'cell gene'), 
         (cell_type_layer, 'cell type'),
         (cell_gene_heatmap_layer, 'cell gene heatmap'),
@@ -321,4 +323,3 @@ def plot_stats(n_clicks, drawn_geojson, idx):
 # run app
 if __name__ == '__main__':
     app.run_server(debug=True)
-
