@@ -322,3 +322,4 @@ def plot_stats(n_clicks, drawn_geojson, idx):
 if __name__ == '__main__':
     app.run_server(debug=True)
 
+
