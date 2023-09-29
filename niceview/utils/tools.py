@@ -277,6 +277,8 @@ def save_roi_data_img(coords, adata, img, home_dir):
         
         # save image
         x1, y1, x2, y2 = get_bounding_box(coord)
+        pts = np.array(coord, np.int32).reshape((-1, 1, 2))
+        cv2.polylines(img, [pts], isClosed=True, color=(0, 0, 255), thickness=1)
         cropped_region = img[y1:y2, x1:x2]
         cv2.imwrite(os.path.join(home_dir, f'roi-{idx}.tiff'), cropped_region)
 
