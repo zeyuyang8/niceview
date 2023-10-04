@@ -9,4 +9,5 @@ toml==0.10.2
 dash_uploader==0.6.0
 dash_loading_spinners==1.0.0
 ipyleaflet==0.17.4
+pyproj==3.6.1
 packaging==21.3

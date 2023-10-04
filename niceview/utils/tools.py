@@ -264,13 +264,17 @@ def save_roi_data_img(coords, adata, img, home_dir):
     """
     for idx, coord in enumerate(coords):
         # save adata
-        roi = Polygon(coord)
-        locs = list(map(lambda x: roi.contains(Point(x)), adata.obsm['spatial']))
-        to_keep = adata[locs].copy()
-        h5ad_path = os.path.join(home_dir, f'roi-{idx}.h5ad')
-        to_keep.write_h5ad(h5ad_path)
+        if adata is not None:
+            roi = Polygon(coord)
+            locs = list(map(lambda x: roi.contains(Point(x)), adata.obsm['spatial']))
+            to_keep = adata[locs].copy()
+            h5ad_path = os.path.join(home_dir, f'roi-{idx}.h5ad')
+            to_keep.write_h5ad(h5ad_path)
         
         # save image
         x1, y1, x2, y2 = get_bounding_box(coord)
+        pts = np.array(coord, np.int32).reshape((-1, 1, 2))
+        cv2.polylines(img, [pts], isClosed=True, color=(255, 0, 0), thickness=4)
         cropped_region = img[y1:y2, x1:x2]
         cv2.imwrite(os.path.join(home_dir, f'roi-{idx}.tiff'), cropped_region)
+

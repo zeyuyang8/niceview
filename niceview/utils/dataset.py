@@ -18,6 +18,7 @@ from niceview.utils.cell import get_nuclei_pixels
 from niceview.pyplot.heatmap import heatmap_from_scatter
 from scipy import ndimage
 import scipy
+from pyproj import Geod
 
 Image.MAX_IMAGE_PIXELS = None
 CMAX = 255
@@ -173,6 +174,20 @@ class ThorQuery:
                 allow_pickle=True,
             )
         
+         # random color
+        if not os.path.exists(self.dataset.get_cache_field(sample_id, 'mask-cell-random-img')):
+            cv2.imwrite(
+                self.dataset.get_cache_field(sample_id, 'mask-cell-random-img'),
+                mask_to_image(
+                    mask_filter_relabel(
+                        self.dataset.get_data_field(sample_id, 'cell-mask'),
+                        cell_matched_region,
+                        np.random.randint(CMIN, CMAX, len(cell_matched_region)),
+                    ),
+                    cv2.COLORMAP_JET,
+                ),
+            )
+
         # gene
         if selected_cell_gene_name:
             cell_gene = load_npz(
@@ -264,7 +279,18 @@ class ThorQuery:
         """
         # analysis
         self.cell_analysis(sample_id, selected_cell_gene_name, label_analysis, heatmap_analysis, selected_pathway)
-        
+
+         # random color
+        if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-random-img')):
+            cv2.imwrite(
+                self.dataset.get_cache_field(sample_id, 'blend-cell-random-img'),
+                blend(
+                    self.dataset.get_data_field(sample_id, 'wsi-img'),
+                    self.dataset.get_cache_field(sample_id, 'mask-cell-random-img'),
+                    mask_opacity,
+                ),
+            )
+
         if selected_cell_gene_name:
             if not os.path.exists(self.dataset.get_cache_field(sample_id, 'blend-cell-gene-img')):
                 cv2.imwrite(
@@ -323,6 +349,13 @@ class ThorQuery:
         # blend
         self.cell_blend(sample_id, selected_cell_gene_name, label_analysis, heatmap_analysis, selected_pathway, mask_opacity)
         
+         # random color
+        if not os.path.exists(self.dataset.get_cache_field(sample_id, 'gis-blend-cell-random-img')):
+            geo_ref_raster(
+                self.dataset.get_cache_field(sample_id, 'blend-cell-random-img'),
+                self.dataset.get_cache_field(sample_id, 'gis-blend-cell-random-img'),
+            )
+            
         # georeference images for blended cell selected gene and cell type
         if selected_cell_gene_name:
             if not os.path.exists(self.dataset.get_cache_field(sample_id, 'gis-blend-cell-gene-img')):
@@ -355,7 +388,7 @@ class ThorQuery:
         """Spot analysis.
         
         Args:
-            sample_id (str): sample id.
+            sample_id (str): sample id
             selected_spot_gene_name (str): list of selected spot gene name.
             thickness (int): thickness of the circle.
         """
@@ -513,7 +546,7 @@ class ThorQuery:
         """
         client = TileClient(
             self.dataset.get_cache_field(sample_id, cache_field),
-            cors_all=True, host="0.0.0.0"
+            cors_all=True
         )
         layer = get_leaflet_tile_layer(client)
         return client, layer
@@ -577,15 +610,37 @@ class ThorQuery:
             anndata.AnnData: cell adata.
             numpy.ndarray: image.
         """
-        cell_adata = sc.read_h5ad(
-            self.dataset.get_data_field(sample_id, 'cell'),
-        )
+        try:
+            cell_adata = sc.read_h5ad(
+                self.dataset.get_data_field(sample_id, 'cell'),
+            )
+        except FileNotFoundError:
+            cell_adata = None
+            pass
         img = cv2.imread(
             self.dataset.get_data_field(sample_id, 'wsi-img'),
         )
         return cell_adata, img
     
     
+    def get_factor(self, gis_img_path, actual_distance=1e-6):
+        """Get factor for converting pixel distance to actual distance.
+        
+        Args:
+            gis_img_path (str): path to the GIS image.
+            actual_distance (float): actual distance in micrometer.
+            
+        Returns:
+            float: factor.
+        """
+        with rasterio.open(gis_img_path) as src:        
+            lat1, lon1 = src.xy(0, 0)
+            lat2, lon2 = src.xy(0, 1)
+        g = Geod(ellps='clrk66') 
+        _, _, dist = g.inv(lon1, lat1, lon2, lat2)
+        factor = actual_distance / dist * 10 ** 6  # first convert to meter then convert to micrometer
+        return factor
+
     def process_data(self, sample_id,  height_width=None, img_path=None, mask_path=None, adata_path=None):
         
         if height_width is not None:
@@ -595,7 +650,6 @@ class ThorQuery:
             resize_factor = 10000 / max_dim
         if img_path is not None:
             img = cv2.imread(img_path)
-            print(img_path)
             height, width, _ = img.shape
             max_dim = max(height, width)
             if max_dim < 10000:

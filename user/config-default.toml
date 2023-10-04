@@ -1,0 +1,8 @@
+[path]
+data = '../db/data/'
+cache = '../db/cache/'
+
+[constant]
+cmin = 0
+cmax = 255
+max_file_size = 5000

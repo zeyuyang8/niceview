@@ -2,7 +2,6 @@
 
 
 import matplotlib.pyplot as plt
-import dash_leaflet as dl
 
 CMIN = 0
 CMAX = 255
@@ -46,8 +45,8 @@ def create_leaflet_map(
     Returns:
         Map
     """
-
- 
+    #import interface.dash_leaflet.dash_leaflet as dl
+    import dash_leaflet as dl
     # viewport
     default_center = [base_client.center()[0], base_client.center()[1]]
     max_zoom = base_client.max_zoom

@@ -1,20 +1,39 @@
+
 import sys
-sys.path.append("../")
-from niceview.utils.dataset import ThorQuery
+sys.path.append("./")
+#from niceview.utils.dataset import ThorQuery
 from niceview.pyplot.leaflet import create_leaflet_map
+from interface.biogis_inter.leaflet import *
 import shutil
 import json
 import toml
 import os
 import zipfile
+import re
 
-config = toml.load('../user/config.toml')
-data_path = config['path']['data']
-cache_path = config['path']['cache']
-max_file_size = config['constant']['max_file_size']
+def dump_default_para_config():
+    with open('../user/config-default.toml', 'r') as conf:
+        configs = toml.load(conf)
+    with open('../user/config.toml', 'w') as conf:
+        toml.dump(configs,conf)
 
 
-def get_default_para():
+def update_real_path_data_cache():
+    with open('../user/config.toml', 'r') as conf:
+        configs = toml.load(conf)
+    configs['path']['data'] = os.path.abspath(configs['path']['data'])+ "/"
+    configs['path']['cache'] = os.path.abspath(configs['path']['cache'])+ "/"
+    with open('../user/config.toml', 'w') as conf:
+        toml.dump(configs,conf)
+
+dump_default_para_config()
+update_real_path_data_cache()
+configs = toml.load('../user/config.toml')
+data_path = configs['path']['data']
+cache_path = configs['path']['cache']
+max_file_size = configs['constant']['max_file_size']
+
+def dump_default_para_arg():
     """
     Sets the application parameters to their default values.
 
@@ -35,10 +54,20 @@ def get_default_para():
         p_input_default = json.load(p_input)
     with open('../user/previous-input.json', 'w') as p_input:
         json.dump(p_input_default, p_input)
+    
     # with open('../db/db-info-default.json', 'r') as info:
     #     db_info_default = json.load(info)
     # with open('../db/db-info.json', 'w') as info:
     #     json.dump(db_info_default, info)
+
+
+def dumpjson_parameter_from_user_input(folder_id, args=None, p_input_json=None):
+    if args is not None:
+        with open(f'../user{folder_id}/args.json', 'w') as f:
+            json.dump(args, f)
+    if p_input_json is not None:
+        with open(f'../user{folder_id}/previous-input.json', 'w') as p_input:
+            json.dump(p_input_json, p_input)
 
 
 def files_generate(sample_id):
@@ -86,17 +115,19 @@ def cache_generate(sample_id, sample_id_file='', sample_id_gene_cell='', sample_
         'gis-blend-spots': '-'.join([sample_id, 'gis-blend-spot-gene-img.tiff']),
         'gis-blend-cell-type': '-'.join([sample_id, 'gis-blend-cell-type-img.tiff']),
         'gis-blend-cell-heatmap': '-'.join([sample_id, 'gis-blend-cell-pathway-heatmap-img.tiff']),
+        'gis-blend-cell-random-img': '-'.join([sample_id, 'gis-blend-cell-random-img.tiff']),
 
         'gis-img-file': '-'.join([sample_id_file, 'gis-wsi-img.tiff']),
         'gis-blend-cells-gene': '-'.join([sample_id_gene_cell, 'gis-blend-cell-gene-img.tiff']),
         'gis-blend-spots-gene': '-'.join([sample_id_gene_spot, 'gis-blend-spot-gene-img.tiff']),
         'gis-blend-cell-type-file': '-'.join([sample_id_file, 'gis-blend-cell-type-img.tiff']),
         'gis-blend-cell-pathway-heatmap': '-'.join([sample_id_pathway, 'gis-blend-cell-pathway-heatmap-img.tiff']),
+        'gis-blend-cell-random-img-file': '-'.join([sample_id_file, 'gis-blend-cell-random-img.tiff']),
     }
     return cache
 
 
-def get_parameter():
+def get_parameter(folder_id):
     """
     Get parameters from configuration files and create a ThorQuery object.
 
@@ -110,9 +141,10 @@ def get_parameter():
     cell_label_encoder = db_info['cell_label_encoder']
     cell_label_cmap = db_info['cell_label_cmap']
     primary_key_list = db_info['primary_key_list']
-    with open('../user/args.json') as f:
+    with open(f'../user{folder_id}/args.json') as f:
         args = json.load(f)
-
+    with open(f'../user{folder_id}/previous-input.json', 'r') as p_input:
+        p_input_json = json.load(p_input)
     thor = ThorQuery(
         data_path,
         cache_path,
@@ -123,30 +155,50 @@ def get_parameter():
         primary_key_list,
     )
     
-    return thor, args
+    return thor, args, p_input_json
 
 
-def get_wsi():
+def update_javascript(new_factor):
+    #file_path ="../assets/dash_leaflet.js"
+    file_path ="./assets/dash_leaflet.js"
+    # Read the file
+    # Read the file content
+    with open(file_path, 'r') as file:
+        content = file.read()
+    # Define the pattern to match the line you want to replace
+    pattern = r'_updateMetric:function\(t\){var e=this\._getRoundNum\(t\),n=e\*[-+]?\d*\.\d+\.toFixed\(2\)\+'
+
+    # Define the replacement string
+    replacement = r'_updateMetric:function(t){var e=this._getRoundNum(t),n=' + new_factor + '.toFixed(2)+'
+
+    # Perform the replacement
+    new_content = re.sub(pattern, replacement, content)
+
+    # Save the modified content back to the file
+    with open(file_path, 'w') as file:
+        file.write(new_content)
+
+def get_wsi(folder_id):
     """
     Get client for wsi image and perform caching.
 
     Returns:
         None
     """
-    thor, args = get_parameter()
+    thor, args, p_input_json = get_parameter(folder_id)
     sample_id = args['sampleId']
     sample_id_file = args['sampleId'] + '-' + args['fileName']
 
     args["sampleIdFile"] = sample_id_file
 
-    with open('../user/args.json', 'w') as f:
-        json.dump(args, f)
+    with open(f'../user{folder_id}/args.json', 'w') as f:
+            json.dump(args, f)
     thor.wsi_gis(sample_id)
     cache = cache_generate(sample_id, sample_id_file=sample_id_file)
     shutil.copy(os.path.join(cache_path, cache["gis-img"]), os.path.join(cache_path, cache["gis-img-file"]))
     
 
-def calculation_cell(label_analysis=True):
+def calculation_cell(folder_id, label_analysis=True):
     """
     Perform cell gene analysis and caching.
 
@@ -156,7 +208,7 @@ def calculation_cell(label_analysis=True):
     Returns:
         None
     """
-    thor, args = get_parameter()
+    thor, args, p_input_json = get_parameter(folder_id)
     sample_id = args['sampleId']
     sample_id_file = args['sampleIdFile']
     selected_cell_gene_name = args['selectedCellGeneName']
@@ -166,8 +218,9 @@ def calculation_cell(label_analysis=True):
     
     args['sampleIdCellGene'] = sample_id_gene_cell
 
-    with open('../user/args.json', 'w') as f:
-        json.dump(args, f)
+
+    with open(f'../user{folder_id}/args.json', 'w') as f:
+            json.dump(args, f)
 
     thor.cell_gis(
         sample_id,
@@ -180,7 +233,7 @@ def calculation_cell(label_analysis=True):
     # shutil.copy(os.path.join(cache_path, cache["gis-blend-cell-type"]), os.path.join(cache_path, cache["gis-blend-cell-type-file"]))
 
 
-def calculation_pathway(label_analysis=False):
+def calculation_pathway(folder_id, label_analysis=False):
     """
     Perform cell gene analysis and caching.
 
@@ -190,7 +243,7 @@ def calculation_pathway(label_analysis=False):
     Returns:
         None
     """
-    thor, args = get_parameter()
+    thor, args, p_input_json = get_parameter(folder_id)
     sample_id = args['sampleId']
     selected_pathway = args["selectedPathway"]
     
@@ -200,8 +253,9 @@ def calculation_pathway(label_analysis=False):
     
     args['sampleIdPathway'] = sample_id_pathway
 
-    with open('../user/args.json', 'w') as f:
-        json.dump(args, f)
+
+    with open(f'../user{folder_id}/args.json', 'w') as f:
+            json.dump(args, f)
 
     thor.cell_gis(
         sample_id=sample_id,
@@ -214,7 +268,7 @@ def calculation_pathway(label_analysis=False):
     # shutil.copy(os.path.join(cache_path, cache["gis-blend-cell-type"]), os.path.join(cache_path, cache["gis-blend-cell-type-file"]))
 
 
-def calculation_CNV(label_analysis=True):
+def calculation_CNV(folder_id, label_analysis=True):
     """
     Perform cell gene analysis and caching.
 
@@ -224,17 +278,17 @@ def calculation_CNV(label_analysis=True):
     Returns:
         None
     """
-    thor, args = get_parameter()
+    thor, args, p_input_json = get_parameter(folder_id)
     sample_id = args['sampleId']
     sample_id_file = args['sampleIdFile']
 
-    with open('../user/previous-input.json', 'r') as p_input:
+    with open(f'../user{folder_id}/previous-input.json', 'r') as p_input:
         p_input_json = json.load(p_input)
 
     if sample_id_file not in p_input_json["CellType"]:
         p_input_json["CellType"].append(sample_id_file)
 
-    with open('../user/previous-input.json', 'w') as p_input:
+    with open(f'../user{folder_id}/previous-input.json', 'w') as p_input:
         json.dump(p_input_json, p_input)
 
     thor.empty_cache_cell(sample_id, label=True)
@@ -248,14 +302,14 @@ def calculation_CNV(label_analysis=True):
     shutil.copy(os.path.join(cache_path, cache["gis-blend-cell-type"]), os.path.join(cache_path, cache["gis-blend-cell-type-file"]))
 
 
-def calculation_spot():
+def calculation_spot(folder_id):
     """
     Perform spot gene analysis and caching.
 
     Returns:
         None
     """
-    thor, args = get_parameter()
+    thor, args, p_input_json = get_parameter(folder_id)
 
     sample_id = args['sampleId']
     selected_spot_gene_name = args['selectedSpotGeneName']
@@ -265,8 +319,9 @@ def calculation_spot():
 
     args['sampleIdSpotGene'] = sample_id_gene_spot
 
-    with open('../user/args.json', 'w') as f:
-        json.dump(args, f)
+
+    with open(f'../user{folder_id}/args.json', 'w') as f:
+            json.dump(args, f)
 
     thor.spot_gis(
         sample_id=sample_id,
@@ -277,7 +332,7 @@ def calculation_spot():
     shutil.copy(os.path.join(cache_path, cache["gis-blend-spots"]), os.path.join(cache_path, cache["gis-blend-spots-gene"]))
 
 
-def visualization_img_input(data_path, cache_path):
+def visualization_img_input(folder_id, data_path = data_path, cache_path = cache_path):
     """
     Visualize input image.
 
@@ -288,7 +343,7 @@ def visualization_img_input(data_path, cache_path):
     Returns:
         obj: The input map object.
     """
-    thor, args = get_parameter()
+    thor, args, p_input_json = get_parameter(folder_id)
     sample_id_file = args['sampleIdFile']
     wsi_client, wsi_layer = thor.gis_client_and_layer(sample_id_file, 'gis-wsi-img')
     input_map = create_leaflet_map(
@@ -296,12 +351,12 @@ def visualization_img_input(data_path, cache_path):
         wsi_client,
         wsi_layer,
         [],
-        cmax=None
+        cmax=0
     )
     return input_map
 
 
-def visualization_img_all(data_path, cache_path):
+def visualization_img_all(folder_id, data_path = data_path, cache_path = cache_path):
     """
     Visualize all images including cell gene, cell type, and spot gene.
 
@@ -312,7 +367,7 @@ def visualization_img_all(data_path, cache_path):
     Returns:
         obj: The output map object.
     """
-    thor, args = get_parameter()
+    thor, args, p_input_json = get_parameter(folder_id)
     sample_id_file = args['sampleIdFile']
     sample_id_gene_spot = args['sampleIdSpotGene']
     sample_id_gene_cell = args['sampleIdCellGene']
@@ -320,18 +375,21 @@ def visualization_img_all(data_path, cache_path):
     cell_gene_client, cell_gene_layer = thor.gis_client_and_layer(sample_id_gene_cell, 'gis-blend-cell-gene-img')
     wsi_client, wsi_layer = thor.gis_client_and_layer(sample_id_file, 'gis-wsi-img')
     # cell_type_client, cell_type_layer = thor.gis_client_and_layer(sample_id_file, 'gis-blend-cell-type-img')
-    spot_gene_client, spot_gene_layer = thor.gis_client_and_layer(sample_id_gene_spot, 'gis-blend-spot-gene-img')
+    _, spot_gene_layer = thor.gis_client_and_layer(sample_id_gene_spot, 'gis-blend-spot-gene-img')
     output_map = create_leaflet_map(
         'map-output',
         wsi_client,
         wsi_layer,
-        [(spot_gene_layer, 'spot gene'), (cell_gene_layer, 'cell gene')] 
+        [(spot_gene_layer, 'spot gene'), (cell_gene_layer, 'cell gene')],
+        cmax=0 
         # (cell_type_layer, 'cell type')],
     )
     return output_map
 
 
-def visualization_img_cell(data_path, cache_path, cell_type=False, pathway=False):
+all_gene_cell_layer=[]
+gene_cell=[]
+def visualization_img_cell(folder_id, data_path = data_path, cache_path = cache_path, cell_type=False, pathway=False, cell_detect=False):
     """
     Visualize cell images including cell gene and optionally cell type.
 
@@ -343,13 +401,15 @@ def visualization_img_cell(data_path, cache_path, cell_type=False, pathway=False
     Returns:
         obj: The output map object.
     """
-    thor, args = get_parameter()
+    thor, args, p_input_json = get_parameter(folder_id)
     sample_id = args['sampleId']
     selected_cell_gene_name = args['selectedCellGeneName']
     sample_id_file = args['sampleIdFile']
     sample_id_gene_cell = args['sampleIdCellGene']
     sample_id_pathway = args['sampleIdPathway']
-
+    if len(all_gene_cell_layer) > 10:
+        all_gene_cell_layer.clear()
+        gene_cell.clear()
     if cell_type is True:
         wsi_client, wsi_layer = thor.gis_client_and_layer(sample_id_file, 'gis-wsi-img')
         _, cell_type_layer = thor.gis_client_and_layer(sample_id_file, 'gis-blend-cell-type-img')
@@ -357,7 +417,8 @@ def visualization_img_cell(data_path, cache_path, cell_type=False, pathway=False
             'map-output',
             wsi_client,
             wsi_layer,
-            [(cell_type_layer, 'cell type')]
+            [(cell_type_layer, 'cell type')],
+            cmax=0
             
         )
     
@@ -369,21 +430,41 @@ def visualization_img_cell(data_path, cache_path, cell_type=False, pathway=False
             wsi_client,
             wsi_layer,
             [(cell_pathway_heatmap_layer, f'{sample_id_pathway}')],
-            cmax=thor.get_gene_max(sample_id, selected_cell_gene_name)
+            cmax=0
         )
-    elif cell_type is False and pathway is False:
-        _, cell_gene_layer = thor.gis_client_and_layer(sample_id_gene_cell, 'gis-blend-cell-gene-img')
+
+    elif cell_detect is True:
+        _, cell_random_layer = thor.gis_client_and_layer(sample_id_file, 'gis-blend-cell-random-img')
         wsi_client, wsi_layer = thor.gis_client_and_layer(sample_id_file, 'gis-wsi-img')
         output_map = create_leaflet_map(
             'map-output',
             wsi_client,
             wsi_layer,
-            [(cell_gene_layer, f'{sample_id_gene_cell}')]
+            [(cell_random_layer, 'cell detection')],
+            cmax=0
         )
+        
+    elif cell_type is False and pathway is False and cell_detect is False:
+        _, globals()[f"cell_gene_layer_{selected_cell_gene_name}"] = thor.gis_client_and_layer(sample_id_gene_cell, 'gis-blend-cell-gene-img')
+        wsi_client, wsi_layer = thor.gis_client_and_layer(sample_id_file, 'gis-wsi-img')
+        if selected_cell_gene_name in gene_cell:
+            pass
+        else:
+            all_gene_cell_layer.append((globals()[f"cell_gene_layer_{selected_cell_gene_name}"],f'cell data: {selected_cell_gene_name}'))
+            gene_cell.append(selected_cell_gene_name)
+        output_map = create_leaflet_map(
+            'map-output',
+            wsi_client,
+            wsi_layer,
+            all_gene_cell_layer,
+            cmax=0
+        )
+        
     return output_map
 
-
-def visualization_img_spot(data_path, cache_path):
+all_gene_spot_layer=[]
+gene_spot=[]
+def visualization_img_spot(folder_id, data_path = data_path, cache_path = cache_path):
     """
     Visualize spot images including spot gene.
 
@@ -394,20 +475,26 @@ def visualization_img_spot(data_path, cache_path):
     Returns:
         obj: The output map object.
     """
-    thor, args = get_parameter()
+    thor, args, p_input_json = get_parameter(folder_id)
     sample_id = args['sampleId']
     selected_spot_gene_name = args['selectedSpotGeneName']
     sample_id_file = args['sampleIdFile']
     sample_id_gene_spot = args['sampleIdSpotGene']
-
+    if len(all_gene_spot_layer) > 10:
+        all_gene_spot_layer.clear()
+        gene_spot.clear()
     wsi_client, wsi_layer = thor.gis_client_and_layer(sample_id_file, 'gis-wsi-img')
-    _, spot_gene_layer = thor.gis_client_and_layer(sample_id_gene_spot, 'gis-blend-spot-gene-img')
+    _, globals()[f"spot_gene_layer_{selected_spot_gene_name}"] = thor.gis_client_and_layer(sample_id_gene_spot, 'gis-blend-spot-gene-img')
+    if selected_spot_gene_name in gene_spot:
+        pass
+    else:
+        all_gene_spot_layer.append((globals()[f"spot_gene_layer_{selected_spot_gene_name}"],f'spot data: {selected_spot_gene_name}'))
+        gene_spot.append(selected_spot_gene_name)
     output_map = create_leaflet_map(
         'map-output',
         wsi_client,
         wsi_layer,
-        [(spot_gene_layer, f'{sample_id_gene_spot}')],
-        cmax=thor.get_gene_max(sample_id, selected_spot_gene_name)
+        all_gene_spot_layer,
     )
     return output_map
 
@@ -433,7 +520,7 @@ def zip_folder(folder_path, output_path):
                 
 
 # clear cache    
-def clear_cache():
+def clear_cache(folder_id):
     """
     Clears cache files.
 
@@ -441,16 +528,17 @@ def clear_cache():
         None or dash.no_update: If no cache files meet the conditions, returns dash.no_update.
             Otherwise, deletes cache files and returns None.
     """
+    thor, args, p_input_json = get_parameter(folder_id)
+    sample_id = args['sampleId']
     files = os.listdir(cache_path)
     for del_file in files:
-        if not del_file.startswith("gt-iz-p9-rep2-file-name-gis-wsi-img.tiff") and os.path.isfile(os.path.join(cache_path, del_file)):
+        if not del_file.startswith("gt-iz-p9-rep2-file-name-gis-wsi-img.tiff") and del_file.startswith(sample_id):
             file_path = os.path.join(cache_path, del_file)
-            print(file_path)
             os.remove(file_path)
 
 
 # clear data
-def clear_data():
+def clear_data(folder_id):
     """
     Clears previous data folder.
 
@@ -458,12 +546,19 @@ def clear_data():
         None or dash.no_update: If no cache files meet the conditions, returns dash.no_update.
             Otherwise, deletes cache files and returns None.
     """
-    with open('../user/args-default.json') as f:
-        args_default = json.load(f)
-    with open('../user/args.json', 'w') as f:
-        json.dump(args_default, f)
+    thor, args, p_input_json = get_parameter(folder_id)
+    sample_id = args['sampleId']
+
     files = os.listdir(data_path)
     for del_file in files:
-        if not del_file.startswith("gt-iz-p9-rep2") and os.path.isfile(os.path.join(data_path, del_file)):
+        if not del_file.startswith("gt-iz-p9-rep2") and del_file.startswith(sample_id):
             file_path = os.path.join(data_path, del_file)
             os.remove(file_path)
+
+    try:
+        if folder_id == "":
+            pass
+        else:
+            shutil.rmtree(f"../user{folder_id}")
+    except FileNotFoundError:
+        pass

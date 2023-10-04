@@ -1,7 +1,6 @@
 [path]
-data = '../db/data/'
-cache = '../db/cache/'
-plot = '../db/plot/'
+data = "/Users/alextran99/Library/CloudStorage/OneDrive-HoustonMethodist/niceview-main_2/db/data/"
+cache = "/Users/alextran99/Library/CloudStorage/OneDrive-HoustonMethodist/niceview-main_2/db/cache/"
 
 [constant]
 cmin = 0
