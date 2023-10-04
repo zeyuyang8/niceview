@@ -1,9 +1,9 @@
 
 import sys
 sys.path.append("./")
-#from niceview.utils.dataset import ThorQuery
+from niceview.utils.dataset import ThorQuery
 from niceview.pyplot.leaflet import create_leaflet_map
-from interface.biogis_inter.leaflet import *
+#from interface.biogis_inter.leaflet import *
 import shutil
 import json
 import toml
