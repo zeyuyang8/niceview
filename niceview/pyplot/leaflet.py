@@ -79,8 +79,8 @@ def create_leaflet_map(
             dl.LayersControl(
                 overlay_layers, hideSingleBase=True,
             ),
-            dl.FullScreenControl(),
             dl.EasyButton(icon='fa-home', id='btn_home'),
+            dl.FullScreenControl(),
             dl.FeatureGroup(
                 [
                     dl.EditControl(
