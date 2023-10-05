@@ -6,6 +6,6 @@ setup(
     version='0.0',
     packages=find_packages(),
     description='visualize large images',
-    author=['Zeyu Yang', 'Xiaoxue Yang'],
+    author=['Zeyu Yang'],
     author_email='zeyuyang8@gmail.com',
 )
