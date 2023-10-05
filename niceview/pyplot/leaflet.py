@@ -54,7 +54,7 @@ def create_leaflet_map(
     for arg_layer, arg_name in list_of_layers:
         layer = dl.Overlay(
             dl.TileLayer(
-                opacity=0.5,
+                opacity=1,
                 url=arg_layer.url,
                 maxZoom=max_zoom,
                 minZoom=default_zoom,
@@ -74,12 +74,13 @@ def create_leaflet_map(
                 minZoom=default_zoom,
             ),
             dl.Colorbar(
-                colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomright',
+                colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomleft',
             ),
             dl.LayersControl(
-                overlay_layers, hideSingleBase=True, position='topright',
+                overlay_layers, hideSingleBase=True,
             ),
             dl.FullScreenControl(),
+            dl.EasyButton(icon='fa-home', id='btn_home'),
             dl.FeatureGroup(
                 [
                     dl.EditControl(
@@ -95,11 +96,12 @@ def create_leaflet_map(
                     ),
                 ],
             ),
+            dl.EasyButton(icon='fa-save', id='btn_save'),
             dl.ScaleControl(imperial=False),
         ],
         center=default_center,
         zoom=default_zoom,
-        style={'height': '70vh', 'margin': 'auto', 'display': 'block'},
+        style={'height': '850px', 'margin': 'auto', 'display': 'block', 'background': 'black'},
         attributionControl=False,
         trackViewport=True,
     )
