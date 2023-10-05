@@ -11,20 +11,40 @@ import os
 import zipfile
 import re
 
+
 def dump_default_para_config():
+    """
+    Sets the config parameters to their default values.
+
+    Parameters:
+        None
+
+    Returns:
+        None
+    """
     with open('../user/config-default.toml', 'r') as conf:
         configs = toml.load(conf)
     with open('../user/config.toml', 'w') as conf:
-        toml.dump(configs,conf)
+        toml.dump(configs, conf)
 
 
 def update_real_path_data_cache():
+    """
+    Get the realpath of data and cache folder
+
+    Parameters:
+        None
+
+    Returns:
+        None
+    """
     with open('../user/config.toml', 'r') as conf:
         configs = toml.load(conf)
-    configs['path']['data'] = os.path.abspath(configs['path']['data'])+ "/"
-    configs['path']['cache'] = os.path.abspath(configs['path']['cache'])+ "/"
+    configs['path']['data'] = os.path.abspath(configs['path']['data']) + "/"
+    configs['path']['cache'] = os.path.abspath(configs['path']['cache']) + "/"
     with open('../user/config.toml', 'w') as conf:
-        toml.dump(configs,conf)
+        toml.dump(configs, conf)
+
 
 dump_default_para_config()
 update_real_path_data_cache()
@@ -33,12 +53,10 @@ data_path = configs['path']['data']
 cache_path = configs['path']['cache']
 max_file_size = configs['constant']['max_file_size']
 
+
 def dump_default_para_arg():
     """
     Sets the application parameters to their default values.
-
-    This function loads default parameter values from respective JSON files and overwrites the current
-    application parameters with these default values.
 
     Parameters:
         None
@@ -54,14 +72,23 @@ def dump_default_para_arg():
         p_input_default = json.load(p_input)
     with open('../user/previous-input.json', 'w') as p_input:
         json.dump(p_input_default, p_input)
-    
-    # with open('../db/db-info-default.json', 'r') as info:
-    #     db_info_default = json.load(info)
-    # with open('../db/db-info.json', 'w') as info:
-    #     json.dump(db_info_default, info)
 
 
 def dumpjson_parameter_from_user_input(folder_id, args=None, p_input_json=None):
+    """
+    Dump user-provided parameters and input JSON to corresponding files.
+
+    Parameters:
+        folder_id (str): Unique folder identifier for each sample.
+
+        args (dict, optional): A dictionary containing user-provided parameters. Default is None.
+
+        p_input_json (dict, optional): A dictionary containing previous input JSON data.
+            Default is None.
+
+    Returns:
+        None
+    """
     if args is not None:
         with open(f'../user{folder_id}/args.json', 'w') as f:
             json.dump(args, f)
@@ -131,6 +158,9 @@ def get_parameter(folder_id):
     """
     Get parameters from configuration files and create a ThorQuery object.
 
+    Parameters:
+        folder_id: unique folder id for each sample
+
     Returns:
         tuple: A tuple containing ThorQuery object and parameters.
     """
@@ -159,17 +189,25 @@ def get_parameter(folder_id):
 
 
 def update_javascript(new_factor):
-    #file_path ="../assets/dash_leaflet.js"
-    file_path ="./assets/dash_leaflet.js"
-    # Read the file
+    """
+    Update a specific line in a JavaScript file with a new mathematical expression.
+
+    Parameters:
+        new_factor (str): The new mathematical expression to replace the existing one.
+            This should be a string representing a JavaScript expression. For example,
+            'e*2.5' will replace the existing expression with 'Math.round(e*2.5)'.
+
+    Returns:
+        None
+    """
+    file_path = "./assets/dash_leaflet.js"
     # Read the file content
     with open(file_path, 'r') as file:
         content = file.read()
     # Define the pattern to match the line you want to replace
-    pattern = r'_updateMetric:function\(t\){var e=this\._getRoundNum\(t\),n=e\*[-+]?\d*\.\d+\.toFixed\(2\)\+'
-
+    pattern = r'_updateMetric:function\(t\){var e=this\._getRoundNum\(t\),n=Math\.round\(e\*[-+]?\d*\.\d+\)'
     # Define the replacement string
-    replacement = r'_updateMetric:function(t){var e=this._getRoundNum(t),n=' + new_factor + '.toFixed(2)+'
+    replacement = r'_updateMetric:function(t){var e=this._getRoundNum(t),n=Math.round(' + new_factor + ')'
 
     # Perform the replacement
     new_content = re.sub(pattern, replacement, content)
@@ -178,9 +216,13 @@ def update_javascript(new_factor):
     with open(file_path, 'w') as file:
         file.write(new_content)
 
+
 def get_wsi(folder_id):
     """
     Get client for wsi image and perform caching.
+
+    Parameters:
+        folder_id: unique folder id for each sample
 
     Returns:
         None
@@ -192,7 +234,7 @@ def get_wsi(folder_id):
     args["sampleIdFile"] = sample_id_file
 
     with open(f'../user{folder_id}/args.json', 'w') as f:
-            json.dump(args, f)
+        json.dump(args, f)
     thor.wsi_gis(sample_id)
     cache = cache_generate(sample_id, sample_id_file=sample_id_file)
     shutil.copy(os.path.join(cache_path, cache["gis-img"]), os.path.join(cache_path, cache["gis-img-file"]))
@@ -203,6 +245,7 @@ def calculation_cell(folder_id, label_analysis=True):
     Perform cell gene analysis and caching.
 
     Parameters:
+        folder_id: unique folder id for each sample
         label_analysis (bool): Whether to perform cell type analysis.
 
     Returns:
@@ -218,9 +261,8 @@ def calculation_cell(folder_id, label_analysis=True):
     
     args['sampleIdCellGene'] = sample_id_gene_cell
 
-
     with open(f'../user{folder_id}/args.json', 'w') as f:
-            json.dump(args, f)
+        json.dump(args, f)
 
     thor.cell_gis(
         sample_id,
@@ -235,9 +277,10 @@ def calculation_cell(folder_id, label_analysis=True):
 
 def calculation_pathway(folder_id, label_analysis=False):
     """
-    Perform cell gene analysis and caching.
+    Perform pathway analysis and caching.
 
     Parameters:
+        folder_id: unique folder id for each sample
         label_analysis (bool): Whether to perform cell type analysis.
 
     Returns:
@@ -253,9 +296,8 @@ def calculation_pathway(folder_id, label_analysis=False):
     
     args['sampleIdPathway'] = sample_id_pathway
 
-
     with open(f'../user{folder_id}/args.json', 'w') as f:
-            json.dump(args, f)
+        json.dump(args, f)
 
     thor.cell_gis(
         sample_id=sample_id,
@@ -265,14 +307,14 @@ def calculation_pathway(folder_id, label_analysis=False):
     
     cache = cache_generate(sample_id, sample_id_pathway=sample_id_pathway)
     shutil.copy(os.path.join(cache_path, cache["gis-blend-cell-heatmap"]), os.path.join(cache_path, cache["gis-blend-cell-pathway-heatmap"]))
-    # shutil.copy(os.path.join(cache_path, cache["gis-blend-cell-type"]), os.path.join(cache_path, cache["gis-blend-cell-type-file"]))
 
 
 def calculation_CNV(folder_id, label_analysis=True):
     """
-    Perform cell gene analysis and caching.
+    Perform CNV analysis and caching.
 
     Parameters:
+        folder_id: unique folder id for each sample
         label_analysis (bool): Whether to perform cell type analysis.
 
     Returns:
@@ -306,6 +348,9 @@ def calculation_spot(folder_id):
     """
     Perform spot gene analysis and caching.
 
+    Parameters:
+        folder_id: unique folder id for each sample
+
     Returns:
         None
     """
@@ -319,9 +364,8 @@ def calculation_spot(folder_id):
 
     args['sampleIdSpotGene'] = sample_id_gene_spot
 
-
     with open(f'../user{folder_id}/args.json', 'w') as f:
-            json.dump(args, f)
+        json.dump(args, f)
 
     thor.spot_gis(
         sample_id=sample_id,
@@ -332,7 +376,7 @@ def calculation_spot(folder_id):
     shutil.copy(os.path.join(cache_path, cache["gis-blend-spots"]), os.path.join(cache_path, cache["gis-blend-spots-gene"]))
 
 
-def visualization_img_input(folder_id, data_path = data_path, cache_path = cache_path):
+def visualization_img_input(folder_id, data_path=data_path, cache_path=cache_path):
     """
     Visualize input image.
 
@@ -351,16 +395,17 @@ def visualization_img_input(folder_id, data_path = data_path, cache_path = cache
         wsi_client,
         wsi_layer,
         [],
-        cmax=0
+        cmax=1
     )
     return input_map
 
 
-def visualization_img_all(folder_id, data_path = data_path, cache_path = cache_path):
+def visualization_img_all(folder_id, data_path=data_path, cache_path=cache_path):
     """
     Visualize all images including cell gene, cell type, and spot gene.
 
     Parameters:
+        folder_id: unique folder id for each sample
         data_path (str): The path to the data directory.
         cache_path (str): The path to the cache directory.
 
@@ -387,13 +432,16 @@ def visualization_img_all(folder_id, data_path = data_path, cache_path = cache_p
     return output_map
 
 
-all_gene_cell_layer=[]
-gene_cell=[]
-def visualization_img_cell(folder_id, data_path = data_path, cache_path = cache_path, cell_type=False, pathway=False, cell_detect=False):
+all_gene_cell_layer = []
+gene_cell = []
+
+
+def visualization_img_cell(folder_id, data_path=data_path, cache_path=cache_path, cell_type=False, pathway=False, cell_detect=False):
     """
     Visualize cell images including cell gene and optionally cell type.
 
     Parameters:
+        folder_id: unique folder id for each sample
         data_path (str): The path to the data directory.
         cache_path (str): The path to the cache directory.
         cell_type (bool): Whether to include cell type visualization.
@@ -402,7 +450,6 @@ def visualization_img_cell(folder_id, data_path = data_path, cache_path = cache_
         obj: The output map object.
     """
     thor, args, p_input_json = get_parameter(folder_id)
-    sample_id = args['sampleId']
     selected_cell_gene_name = args['selectedCellGeneName']
     sample_id_file = args['sampleIdFile']
     sample_id_gene_cell = args['sampleIdCellGene']
@@ -450,7 +497,7 @@ def visualization_img_cell(folder_id, data_path = data_path, cache_path = cache_
         if selected_cell_gene_name in gene_cell:
             pass
         else:
-            all_gene_cell_layer.append((globals()[f"cell_gene_layer_{selected_cell_gene_name}"],f'cell data: {selected_cell_gene_name}'))
+            all_gene_cell_layer.append((globals()[f"cell_gene_layer_{selected_cell_gene_name}"], f'cell data: {selected_cell_gene_name}'))
             gene_cell.append(selected_cell_gene_name)
         output_map = create_leaflet_map(
             'map-output',
@@ -462,13 +509,17 @@ def visualization_img_cell(folder_id, data_path = data_path, cache_path = cache_
         
     return output_map
 
-all_gene_spot_layer=[]
-gene_spot=[]
-def visualization_img_spot(folder_id, data_path = data_path, cache_path = cache_path):
+
+all_gene_spot_layer = []
+gene_spot = []
+
+
+def visualization_img_spot(folder_id, data_path=data_path, cache_path=cache_path):
     """
     Visualize spot images including spot gene.
 
     Parameters:
+        folder_id: unique folder id for each sample
         data_path (str): The path to the data directory.
         cache_path (str): The path to the cache directory.
 
@@ -476,7 +527,6 @@ def visualization_img_spot(folder_id, data_path = data_path, cache_path = cache_
         obj: The output map object.
     """
     thor, args, p_input_json = get_parameter(folder_id)
-    sample_id = args['sampleId']
     selected_spot_gene_name = args['selectedSpotGeneName']
     sample_id_file = args['sampleIdFile']
     sample_id_gene_spot = args['sampleIdSpotGene']
@@ -488,7 +538,7 @@ def visualization_img_spot(folder_id, data_path = data_path, cache_path = cache_
     if selected_spot_gene_name in gene_spot:
         pass
     else:
-        all_gene_spot_layer.append((globals()[f"spot_gene_layer_{selected_spot_gene_name}"],f'spot data: {selected_spot_gene_name}'))
+        all_gene_spot_layer.append((globals()[f"spot_gene_layer_{selected_spot_gene_name}"], f'spot data: {selected_spot_gene_name}'))
         gene_spot.append(selected_spot_gene_name)
     output_map = create_leaflet_map(
         'map-output',
@@ -524,6 +574,9 @@ def clear_cache(folder_id):
     """
     Clears cache files.
 
+    Parameters:
+        folder_id: unique folder id for each sample
+
     Returns:
         None or dash.no_update: If no cache files meet the conditions, returns dash.no_update.
             Otherwise, deletes cache files and returns None.
@@ -542,13 +595,15 @@ def clear_data(folder_id):
     """
     Clears previous data folder.
 
+    Parameters:
+        folder_id: unique folder id for each sample
+
     Returns:
         None or dash.no_update: If no cache files meet the conditions, returns dash.no_update.
             Otherwise, deletes cache files and returns None.
     """
     thor, args, p_input_json = get_parameter(folder_id)
     sample_id = args['sampleId']
-
     files = os.listdir(data_path)
     for del_file in files:
         if not del_file.startswith("gt-iz-p9-rep2") and del_file.startswith(sample_id):

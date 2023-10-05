@@ -1,18 +1,16 @@
-#python app.py --port=8082
+# python app.py --port=8082
 import sys
 sys.path.append("./")
 from interface.biogis_inter.callback import *
 import dash
 from dash import html
 from dash import dcc
-from dash.dependencies import Input, Output,State
+from dash.dependencies import Input, Output, State
 import dash_uploader as du
-import toml
 import dash_loading_spinners as dls
 import shutil
 import argparse
 import uuid
-
 
 
 # Initialize app
@@ -21,7 +19,7 @@ app = dash.Dash(
     meta_tags=[
         {"name": "viewport"}
     ],
-    
+    suppress_callback_exceptions=True
 )
 
 app.title = "BioGIS"
@@ -35,17 +33,18 @@ folder_id = ""
 def app_layout():
     # new_factor = "e*10.094100024003849"
     # update_javascript(new_factor)
+    
     try:
-        os.remove("../user_/selected_area.zip")    
+        os.remove("../user/selected_area.zip")    
     except FileNotFoundError:
         pass
     try:
-        shutil.rmtree("../user_/selected_area/")
+        shutil.rmtree("../user/selected_area/")
     except FileNotFoundError:
         pass
-    clear_cache(folder_id)
-    clear_data(folder_id)
-    dump_default_para_arg()
+    # clear_cache(folder_id)
+    # clear_data(folder_id)
+    # dump_default_para_arg()
     return html.Div( id="body",
         
         children=[
@@ -95,16 +94,8 @@ def app_layout():
                             ),
                             html.Br(),
                             html.Div(id="pathway-dropdown"),
-                            # html.Button('Done(clear cache)', className="button", id="clear-cache", n_clicks=0),
-                            html.Br(),html.Br(),html.Br(),html.Br(),
-                            html.H5("Change number of columns of graph", className="text"), 
-                            dcc.Input(
-                                id='colIdx',
-                                className="input-column-num",
-                                type='number',
-                                placeholder=1,
-                            ),
-                            html.Button('Plot', id='plotButton',className="button", n_clicks=0),
+                            html.Br(),
+                            html.Button('Done (clear cache)', className="button", id="clear-cache", n_clicks=0),
                             dls.Hash(
                                 html.Div(id="status2"),
                                 color="#ffffff",
@@ -129,6 +120,23 @@ def app_layout():
                                 speed_multiplier=2,
                                 size=100
                             ),
+                            dls.Hash(
+                                html.Div(id="status6"),
+                                color="#ffffff",
+                                speed_multiplier=2,
+                                size=100
+                            ),
+                            html.Br(), html.Br(), html.Br(), html.Br(), html.Br(), html.Br(), html.Br(),
+                            html.Br(), html.Br(), html.Br(), html.Br(), html.Br(), html.Br(), html.Br(),
+                            html.Br(), html.Br(), html.Br(), html.Br(), html.Br(), html.Br(), html.Br(),
+                            html.H5("Change number of columns of graph", className="text"), 
+                            dcc.Input(
+                                id='colIdx',
+                                className="input-column-num",
+                                type='number',
+                                placeholder=1,
+                            ),
+                            html.Button('Plot', id='plotButton', className="button", n_clicks=0),
                             ]),
                     html.Div(
                         id='left-column-temp',
@@ -253,6 +261,8 @@ def callback_upload_cell_data(filenames_upload_cell_data):
 def callback_update_output_visual(spot_cell_option, visualize_option):
     return update_output_visual(spot_cell_option, visualize_option, folder_id)
 
+
+# show cell dectection result
 @app.callback(
     Output('input-image', 'children', allow_duplicate=True),
     Input("cell-detection", "n_clicks"),
@@ -261,7 +271,8 @@ def callback_update_output_visual(spot_cell_option, visualize_option):
 def callback_show_cell_detection(n_clicks):
     return show_cell_detection(n_clicks, folder_id)
 
-# upload cnv file
+
+# upload pathway file
 @du.callback(
     output=Output('pathway-dropdown', 'children'),
     id="upload-data-pathway"
@@ -270,6 +281,7 @@ def callback_upload_pathway(filenames_upload_pathway):
     return upload_pathway(filenames_upload_pathway, folder_id)
 
 
+# visualize pathway 
 @app.callback(
     Output('input-image', 'children', allow_duplicate=True),
     Input('spot-cell-option', 'value'),
@@ -300,6 +312,7 @@ def callback_get_gene(spot_cell_option, gene_chosen):
     return get_gene(spot_cell_option, gene_chosen, folder_id)
 
 
+# reset button
 @app.callback(
     Output('input-image', 'children', allow_duplicate=True),
     Input("btn_home", "n_clicks"),
@@ -311,6 +324,7 @@ def callback_reset(n_clicks, spot_cell_option, visual_type):
     return reset(n_clicks, spot_cell_option, visual_type, folder_id)
 
 
+# save chosen region
 @app.callback(
     Output('download', 'data'),
     Input('btn_save', 'n_clicks'),
@@ -320,6 +334,7 @@ def callback_copy_and_rename_file(n_clicks):
     return copy_and_rename_file(n_clicks, folder_id)
 
 
+# get coordinate
 @app.callback(
     Output('status5', 'children'),
     Input('editControl', 'geojson'),
@@ -328,6 +343,8 @@ def callback_copy_and_rename_file(n_clicks):
 def callback_save_roi(drawn_geojson):
     return save_roi(drawn_geojson, folder_id)
 
+
+# plot graph and stats
 @app.callback(
     Output('hist', 'children'),
     Output('stats', 'children'),
@@ -340,9 +357,34 @@ def callback_plot_stats(n_clicks, drawn_geojson, idx):
     return plot_stats(n_clicks, drawn_geojson, idx, folder_id)
 
 
+# clear cache
+@app.callback(
+    Output('input-image', 'children', allow_duplicate=True),
+    Input('clear-cache', 'n_clicks'),
+    prevent_initial_call='initial_duplicate'
+)
+def callback_clear_cache(n_clicks):
+    if n_clicks:
+        clear_cache(folder_id)
+        clear_data(folder_id)
+        dump_default_para_arg()
+        map_input = visualization_img_input(folder_id, data_path, cache_path)
+    return html.Div(id="input-image", children=[map_input])
+
+
+# # clear cache
+# @app.callback(
+#     Output('input-image', 'children', allow_duplicate=True),
+#     Input('visual-type-container', 'value'),
+#     prevent_initial_call='initial_duplicate'
+# )
+# def callback_prevent_update(visualize_option):
+#     if visualize_option == "CNV":
+#         raise dash.exceptions.PreventUpdate
+
 parser = argparse.ArgumentParser(description='Run Dash app.')
-parser.add_argument('--port', type=int, default=8081, help='Port to run the app on')
+parser.add_argument('--port', type=int, default=8080, help='Port to run the app on')
 args = parser.parse_args()
 # Run app
 if __name__ == "__main__":
-    app.run_server(host="localhost", port=args.port, debug=True, dev_tools_hot_reload=False)
+    app.run_server(host="localhost", port=args.port, debug=True, dev_tools_hot_reload=True)

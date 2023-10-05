@@ -2,6 +2,7 @@
 
 
 import matplotlib.pyplot as plt
+import dash_leaflet as dl
 
 CMIN = 0
 CMAX = 255
@@ -45,7 +46,7 @@ def create_leaflet_map(
     Returns:
         Map
     """
-    #import interface.dash_leaflet.dash_leaflet as dl
+    #import interface.dash_leaflet.__init__.py as dl
     import dash_leaflet as dl
     # viewport
     default_center = [base_client.center()[0], base_client.center()[1]]
@@ -55,7 +56,7 @@ def create_leaflet_map(
     # overlay
     overlay_layers = []
     for arg_layer, arg_name in list_of_layers:
-        layer = dl.Overla(
+        layer = dl.Overlay(
             dl.TileLayer(
                 opacity=1,
                 url=arg_layer.url,
@@ -76,9 +77,9 @@ def create_leaflet_map(
                 maxZoom=max_zoom,
                 minZoom=default_zoom,
             ),
-            dl.Colorbar(
-                colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomleft',
-            ),
+            # dl.Colorbar(
+            #     colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomleft',
+            # ),
             dl.LayersControl(
                 overlay_layers, hideSingleBase=True,
             ),
