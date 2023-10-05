@@ -23,3 +23,7 @@ pip install -e .
   - [NVDIA RAPIDS post](https://developer.nvidia.com/blog/accelerated-data-analytics-a-guide-to-data-visualization-with-rapids/)
 - [Use leaflet and react-leaflet as external packages](https://github.com/emilhe/dash-leaflet/pull/146)
 - [Viewport](https://github.com/emilhe/dash-leaflet/blob/master/CHANGELOG.md#107---2023-08-27)
+
+## Stable version
+
+- [Sep 29](https://github.com/zeyuyang8/niceview/commit/7e2af2acbf0e1cb72a9e5c6bbb707f73501ee463)
