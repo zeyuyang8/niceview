@@ -1,16 +1,11 @@
 """Tools."""
 
-from niceview.utils.cell import paint_regions
-import numpy as np
-from scipy.sparse import load_npz
-import cv2
-from shapely.geometry import Point, Polygon
 import os
-import rasterio
-from pyproj import Geod
-from scipy import ndimage
-import scipy
-import scanpy as sc
+import numpy as np
+import cv2
+from scipy.sparse import load_npz
+from shapely.geometry import Point, Polygon
+from niceview.utils.cell import paint_regions
 
 
 def txt_to_list(txt_file):
@@ -269,78 +264,16 @@ def save_roi_data_img(coords, adata, img, home_dir):
     """
     for idx, coord in enumerate(coords):
         # save adata
-        roi = Polygon(coord)
-        locs = list(map(lambda x: roi.contains(Point(x)), adata.obsm['spatial']))
-        to_keep = adata[locs].copy()
-        h5ad_path = os.path.join(home_dir, f'roi-{idx}.h5ad')
-        to_keep.write_h5ad(h5ad_path)
+        if adata is not None:
+            roi = Polygon(coord)
+            locs = list(map(lambda x: roi.contains(Point(x)), adata.obsm['spatial']))
+            to_keep = adata[locs].copy()
+            h5ad_path = os.path.join(home_dir, f'roi-{idx}.h5ad')
+            to_keep.write_h5ad(h5ad_path)
         
         # save image
         x1, y1, x2, y2 = get_bounding_box(coord)
         pts = np.array(coord, np.int32).reshape((-1, 1, 2))
-        cv2.polylines(img, [pts], isClosed=True, color=(0, 0, 255), thickness=1)
+        cv2.polylines(img, [pts], isClosed=True, color=(255, 0, 0), thickness=4)
         cropped_region = img[y1:y2, x1:x2]
         cv2.imwrite(os.path.join(home_dir, f'roi-{idx}.tiff'), cropped_region)
-
-
-def get_factor(gis_img_path, actual_distance=1e-6):
-    """Get factor for converting pixel distance to actual distance.
-    
-    Args:
-        gis_img_path (str): path to the GIS image.
-        actual_distance (float): actual distance in micrometer.
-        
-    Returns:
-        float: factor.
-    """
-    with rasterio.open(gis_img_path) as src:        
-        lat1, lon1 = src.xy(0, 0)
-        lat2, lon2 = src.xy(0, 1)
-    g = Geod(ellps='clrk66') 
-    _, _, dist = g.inv(lon1, lat1, lon2, lat2)
-    factor = actual_distance / dist * 10 ** 6  # first convert to meter then convert to micrometer
-    return factor
-
-
-def process_data(img_path, mask_path, adata_path):
-    """Process data for big image.
-    
-    Args:
-        img_path (str): Path to image.
-        mask_path (str): Path to mask.
-        adata_path (str): Path to adata.
-    
-    Returns:
-        None
-    """
-    img = cv2.imread(img_path)
-    height, width, _ = img.shape
-    max_dim = max(height, width)
-    
-    ref_val = 10000
-    if max_dim < ref_val:
-        return None
-    
-    # calculate resize factor
-    resize_factor = ref_val / max_dim
-    resized_img = cv2.resize(img, (int(width * resize_factor), int(height * resize_factor)))
-    
-    # read mask
-    mask = np.array(load_npz(mask_path).todense())
-    original_shape = mask.shape
-    target_shape = (int(height * resize_factor), int(width * resize_factor))  # (height, width) in numpy format
-
-    # resize mask array
-    resized_mask = ndimage.zoom(
-        mask, (target_shape[0] / original_shape[0], target_shape[1] / original_shape[1]), order=0,
-    )
-    
-    # resize adata
-    adata = sc.read_h5ad(adata_path)
-    adata.obsm['spatial'] = adata.obsm['spatial'] * resize_factor
-    
-    # write data
-    cv2.imwrite('temp.png', resized_img)
-    scipy.sparse.save_npz('temp.npz', scipy.sparse.csr_matrix(resized_mask))
-    adata.write('temp.h5ad')
-    return None
