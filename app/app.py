@@ -255,7 +255,7 @@ def display_current_info(viewport):
 @app.callback(
     Output('hist', 'children'),
     Output('stats', 'children'),
-    Input('saveButton', 'n_clicks'),
+    Input('plotButton', 'n_clicks'),
     Input('editControl', 'geojson'),
     State('colIdx', 'value'),
     prevent_initial_call=True,
