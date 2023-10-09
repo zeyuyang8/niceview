@@ -49,7 +49,21 @@ def create_leaflet_map(
     # viewport
     default_center = [base_client.center()[0], base_client.center()[1]]
     max_zoom = base_client.max_zoom
-    default_zoom = base_client.default_zoom + 0.5
+    
+    # viewport bounds
+    expanded_bounds = list(base_layer.bounds)
+    expanded_bounds[0] = list(expanded_bounds[0])
+    expanded_bounds[1] = list(expanded_bounds[1])
+    vert_dst = (expanded_bounds[1][1] - expanded_bounds[0][1]) 
+    hori_dst = (expanded_bounds[1][0] - expanded_bounds[0][0])
+    expanded_bounds[0][1] -= vert_dst
+    expanded_bounds[1][0] += vert_dst
+    expanded_bounds[0][0] -= hori_dst
+    expanded_bounds[1][1] += hori_dst
+
+    # zoom factor
+    zoom_factor = 1.5 * ((vert_dst + hori_dst) / 2) / 0.0085
+    default_zoom = base_client.default_zoom + zoom_factor
     
     # overlay
     overlay_layers = []
@@ -106,5 +120,6 @@ def create_leaflet_map(
         style={'height': '850px', 'margin': 'auto', 'display': 'block', 'background': 'black'},
         attributionControl=False,
         trackViewport=True,
+        maxBounds=expanded_bounds,
     )
     return thor_map

@@ -283,6 +283,7 @@ def plot_stats(n_clicks, drawn_geojson, idx):
         roi = Polygon(coord)
         locs = list(map(lambda x: roi.contains(Point(x)), cell_adata.obsm['spatial']))
         to_keep = cell_adata[locs].copy()
+        print(to_keep.X[:, idx])
         array = to_keep.X[:, idx].ravel()
         target = np.concatenate((target, array))
     
