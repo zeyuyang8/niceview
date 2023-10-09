@@ -31,6 +31,7 @@ def create_leaflet_map(
     base_layer,
     list_of_layers,
     cmax=CMAX,
+    classes=None,
 ):
     """Create leaflet map.
     
@@ -40,6 +41,7 @@ def create_leaflet_map(
         base_layer (TileLayer): Base layer.
         list_of_layers (list[tuple]): List of layers.
         cmax (int, optional): Max value.
+        classes (int): List of classes.
         
     Returns:
         Map
@@ -74,7 +76,7 @@ def create_leaflet_map(
                 minZoom=default_zoom,
             ),
             dl.Colorbar(
-                colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomleft',
+                colorscale=get_hex_values('jet'), width=width, height=height, min=CMIN, max=cmax, position='bottomleft', classes=classes,
             ),
             dl.LayersControl(
                 overlay_layers, hideSingleBase=True,

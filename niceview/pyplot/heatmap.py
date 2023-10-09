@@ -32,7 +32,6 @@ def heatmap_from_scatter(
     for idx in range(len(coords)):
         score = normalized_scores[idx]
         coord = coords[idx]  # coord in (x, y)
-        
         overlay[coord[1]: coord[1] + patch_size[1], coord[0]: coord[0] + patch_size[0]] += score
         counter[coord[1]: coord[1] + patch_size[1], coord[0]: coord[0] + patch_size[0]] += 1
     zero_mask = counter == 0
