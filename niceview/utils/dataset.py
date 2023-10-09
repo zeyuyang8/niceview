@@ -603,6 +603,27 @@ class ThorQuery:
             cell_gene, cell_gene_name, selected_cell_gene_name,
         )
         return float(cell_selected_gene.max())
+    
+    def get_pathway_max(self, sample_id, selected_pathway):
+        """Get cmax.
+        
+        Args:
+            sample_id (str): sample id.
+            selected_pathway (str): pathway name.
+        
+        Returns:
+            float: max value.
+        """
+        cell_pathway = np.load(
+            self.dataset.get_data_field(sample_id, 'cell-pathway-matrix'),
+        )
+        cell_pathway_name = txt_to_list(
+            self.dataset.get_data_field(sample_id, 'cell-pathway-name'),
+        )
+        cell_selected_pathway = select_col_from_name(
+            cell_pathway, cell_pathway_name, selected_pathway,
+        )
+        return float(cell_selected_pathway.max())
 
     def get_cell_adata_and_img(self, sample_id):
         """Get cell adata.
