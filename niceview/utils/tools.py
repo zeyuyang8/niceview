@@ -1,6 +1,7 @@
 """Tools."""
 
 import os
+import copy
 import numpy as np
 import cv2
 from scipy.sparse import load_npz
@@ -274,6 +275,7 @@ def save_roi_data_img(coords, adata, img, home_dir):
         # save image
         x1, y1, x2, y2 = get_bounding_box(coord)
         pts = np.array(coord, np.int32).reshape((-1, 1, 2))
-        cv2.polylines(img, [pts], isClosed=True, color=(255, 0, 0), thickness=4)
-        cropped_region = img[y1:y2, x1:x2]
+        img_copy = copy.deepcopy(img)
+        cv2.polylines(img_copy, [pts], isClosed=True, color=(255, 0, 0), thickness=4)
+        cropped_region = img_copy[y1:y2, x1:x2]
         cv2.imwrite(os.path.join(home_dir, f'roi-{idx}.tiff'), cropped_region)
