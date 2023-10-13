@@ -130,8 +130,11 @@ app.layout = html.Div(
         html.Div(
             id='mainView',
             children=fig,
-            style={'width': '70vh', 'height': '70vh'},
+            style={'width': '120vh', 'height': '100vh', 'display': 'inline-block'},
         ),
+        html.Br(),
+        html.Br(),
+        html.Div(id='mouse-position'),
         html.Br(),
         html.Div(
             [
@@ -319,6 +322,29 @@ def plot_stats(n_clicks, drawn_geojson, idx):
     )
     
     return dcc.Graph(figure=hist), dcc.Graph(figure=table)
+
+
+# show mouse coordinates with hover
+@app.callback(
+    Output('mouse-position', 'children'),
+    Input('map', 'clickData'),
+)
+def show_mouse_position(clickData):
+    """Show mouse position.
+    
+    Args:
+        clickData (dict): Click data.
+    
+    Returns:
+        str: Mouse position.
+    """
+    lat = clickData['latlng']['lat']
+    lon = clickData['latlng']['lng']
+    y, x = mapper(lon, lat)
+    if clickData is None:
+        return 'Click on the map to get coordinates'
+    else:
+        return f'You clicked on x: {x}, y: {y}'
 
 
 # run app
