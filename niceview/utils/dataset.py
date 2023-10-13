@@ -395,7 +395,8 @@ class ThorQuery:
             thickness (int): thickness of the circle.
         """
         # read image shape
-        img_shape = load_npz(self.dataset.get_data_field(sample_id, 'cell-mask')).shape
+        # img_shape = load_npz(self.dataset.get_data_field(sample_id, 'cell-mask')).shape
+        img_shape = cv2.imread(self.dataset.get_data_field(sample_id, 'wsi-img')).shape[:2]
         
         if selected_spot_gene_name:
             # spot info
