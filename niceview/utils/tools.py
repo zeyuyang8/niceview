@@ -7,6 +7,10 @@ import cv2
 from scipy.sparse import load_npz
 from shapely.geometry import Point, Polygon
 from niceview.utils.cell import paint_regions
+import matplotlib.pyplot as plt
+
+CMIN = 0
+CMAX = 255
 
 
 def txt_to_list(txt_file):
@@ -91,6 +95,24 @@ def mask_filter_relabel(mask_path, matched_regions, labels):
     # TODO: increase speed of `paint_regions`
     mask_filtered_relabeled = paint_regions(mask.shape, matched_regions, cell_colors_list=labels)
     return mask_filtered_relabeled.data
+
+
+def get_hex_values(colormap_name):
+    """Get hex values.
+    
+    Args:
+        colormap_name (str): Colormap name.
+    
+    Returns:
+        list[str]: List of hex values.
+    """
+    cmap = plt.get_cmap(colormap_name)
+    hex_values = []
+    for i in range(cmap.N):
+        rgba = cmap(i)
+        hex_color = '#{:02X}{:02X}{:02X}'.format(int(rgba[0] * CMAX), int(rgba[1] * CMAX), int(rgba[2] * CMAX))
+        hex_values.append(hex_color)
+    return hex_values
 
 
 def hex_to_rgb(hex_color):
@@ -254,7 +276,7 @@ def get_bounding_box(coords):
     return x1, y1, x2, y2
 
 
-def save_roi_data_img(coords, adata, img, home_dir):
+def save_roi_data_img(coords, adata, img, home_dir, small: bool = False):
     """Get roi from coordinates.
     
     Args:
@@ -262,6 +284,7 @@ def save_roi_data_img(coords, adata, img, home_dir):
         adata (anndata.AnnData): anndata.
         img (np.ndarray): image.
         home_dir (str): home directory.
+        small (bool): whether to save small image.
     """
     for idx, coord in enumerate(coords):
         # save adata
@@ -277,5 +300,8 @@ def save_roi_data_img(coords, adata, img, home_dir):
         pts = np.array(coord, np.int32).reshape((-1, 1, 2))
         img_copy = copy.deepcopy(img)
         cv2.polylines(img_copy, [pts], isClosed=True, color=(255, 0, 0), thickness=4)
-        cropped_region = img_copy[y1:y2, x1:x2]
+        if small:
+            cropped_region = img_copy[y1:y2, x1:x2]
+        else:
+            cropped_region = img_copy
         cv2.imwrite(os.path.join(home_dir, f'roi-{idx}.tiff'), cropped_region)

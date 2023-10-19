@@ -1,28 +1,7 @@
 """Leaflet."""
 
 import dash_leaflet as dl
-import matplotlib.pyplot as plt
-
-CMIN = 0
-CMAX = 255
-
-
-def get_hex_values(colormap_name):
-    """Get hex values.
-    
-    Args:
-        colormap_name (str): Colormap name.
-    
-    Returns:
-        list[str]: List of hex values.
-    """
-    cmap = plt.get_cmap(colormap_name)
-    hex_values = []
-    for i in range(cmap.N):
-        rgba = cmap(i)
-        hex_color = '#{:02X}{:02X}{:02X}'.format(int(rgba[0] * CMAX), int(rgba[1] * CMAX), int(rgba[2] * CMAX))
-        hex_values.append(hex_color)
-    return hex_values
+from niceview.utils.tools import CMAX, CMIN, get_hex_values
 
 
 def create_leaflet_map(
