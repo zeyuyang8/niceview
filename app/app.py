@@ -12,6 +12,7 @@ from shapely.geometry import Point, Polygon
 from niceview.utils.dataset import ThorQuery
 from niceview.pyplot.leaflet import create_leaflet_map
 from niceview.utils.tools import save_roi_data_img
+from localtileserver.web.blueprint import cache, tileserver
 
 # config
 config = toml.load('user/config.toml')
@@ -97,6 +98,8 @@ app = Dash(
         },
     ],
 )
+cache.init_app(app.server)
+app.server.register_blueprint(tileserver, url_prefix='/')
 app.title = 'Nice View'
 app.layout = html.Div(
     id='root',
