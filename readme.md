@@ -1,4 +1,4 @@
-# Map website
+# Map Website
 
 ## Installation
 
