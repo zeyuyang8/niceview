@@ -1,4 +1,4 @@
-# Map Website
+# Website for Interactive Visualization of Map Data
 
 ## Installation
 
